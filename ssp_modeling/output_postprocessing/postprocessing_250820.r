@@ -11,8 +11,8 @@ library(ggplot2)
 rm(list=ls())
 
 #ouputfile
-dir.output  <- "ssp_modeling/ssp_run_output/sisepuede_results_sisepuede_run_2025-09-26T19;43;09.815150/"
-output.file <- "sisepuede_results_sisepuede_run_2025-09-26T19;43;09.815150_WIDE_INPUTS_OUTPUTS.csv"
+dir.output  <- "ssp_modeling/ssp_run_output/sisepuede_results_sisepuede_run_2025-09-29T15;34;07.428105/"
+output.file <- "sisepuede_results_sisepuede_run_2025-09-29T15;34;07.428105_WIDE_INPUTS_OUTPUTS.csv"
 
 region <- "morocco" 
 iso_code3 <- "MAR"
