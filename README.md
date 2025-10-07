@@ -69,15 +69,15 @@ Your environment is now ready to use, with all dependencies (including those ins
 ## Project Structure
 
 The most relevant files are inside the `ssp_modeling` directory:
-
-- `config_files/` – YAML configuration files used by the notebooks.
-- `input_data/` – Raw CSVs for each scenario.
-- `notebooks/` – Jupyter notebooks that manage the modeling runs.
-- `ssp_run/` – Output folders created after executing a scenario.
-- `scenario_mapping/` – Spreadsheets with the mapping between SSP transformations and region-specific measures. This is where the scenarios and transformation intensities are defined.
-- `transformations/` – CSVs and YAML files describing the transformations applied by the model.
-- `output_postprocessing/` – R scripts used to rescale model results and
-    generate processed outputs.
+  - `config_files/` – YAML configuration files used by the notebooks.
+  - `input_data/` – Raw data for the model.
+  - `notebooks/` – Jupyter notebooks that manage the modeling runs.
+  - `ssp_run_output/` – Output folders created after executing a scenario which store the simulation output.
+  - `scenario_mapping/` – Spreadsheets with the mapping between SSP transformations and region-specific measures. This is where custom scenarios and transformation intensities are defined.
+  - `transformations/` – CSVs and YAML files describing the transformations and strategies applied by the model.
+  - `output_postprocessing/` – R scripts used to calibrate the model results and generate post-processed outputs. It also generates the levers and jobs tables.
+  - `tableau/` – Stores tableau files and also the post-processed data that is loaded into the dashboards.
+  - `cost-benefits/` – Contains scripts to run the cost-benefits analysis in specific SISEPUEDE simulations.
 
 ## Steps to run the model and load data to Tableau for analysis
 
@@ -94,9 +94,20 @@ All files and folders referenced here are inside the `ssp_modeling` directory.
     * Run the `postprocessing_250820.r` script, editing it to point to the correct data.
     * The script will generate three files; two of them are used in Tableau.
 
-3. **Load data into Tableau**
+3. **Load emissions data into Tableau**
 
    * In the `tableau` directory, locate the Tableau dashboard file and the `data` folder.
    * Copy the postprocessing output files into the `data` folder.
    * Load the files beginning with `decomposed_emissions_` and `drivers_` into Tableau.
+
+4. **Create Levers table and Jobs table**
+    * In the `output_postprocessing/`directory you can find the `levers_and_jobs_table/` folder which contains scripts and additional files to create the levers table and jobs table that need to be also loaded to Tableau.
+    * The levers table uses a csv file that is created in the region manager notebook (where the simulation was executed), this csv file is stored in the specific run folder in the `ssp_run_output/` directory.
+    * The jobs table uses a csv that is already in the `levers_and_jobs_table/` directory.
+
+5. **Run cost and benefits analysis**
+    * In the `cost-benefits/`directory you can fine a notebook called `cb.ipynb` which has the code to run the cost-benefit analysis in a specific SISEPUEDE run.
+    * The code uses a configuration excel that can be found in `cost-benefits/cb_config_file/cb_config_params.xlsx`. Here you can configure cost factors and additional parameters for the cost-benefit analysis.
+
+
 
