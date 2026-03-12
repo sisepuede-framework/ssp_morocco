@@ -187,14 +187,50 @@ Must return 0 corrupt columns before any run.
 ## Section 5: The DAG
 
 ```
-Socioeconomic (ECON + GNRL) -- feeds EVERY sector
-
-Step 1: AFOLU (LNDU+AGRC+LVST -> LNDU -> FRST -> AGRC -> LVST -> LSMM -> SOIL)
-Step 2: CircularEconomy (WALI + TRWW -> WASO)
-Step 3: IPPU
-Step 4: EnergyConsumption (CCSQ -> INEN -> SCOE -> TRNS)
-Step 5: EnergyProduction (NemoMod LP: ENTC + ENFU + ENST)
-Step 6: FugitiveEmissions (FGTV)
+              ┌───────────────────────────┐
+              │ Socioeconomic (ECON+GNRL) │
+              │ population, GDP, HH count │
+              └─────────────┬─────────────┘
+                            │ feeds ALL sectors
+                            ▼
+  ┌─────────────────────────────────────────────────────┐
+  │ Step 1: AFOLU                                       │
+  │ LNDU → FRST → AGRC → LVST → LSMM → SOIL           │
+  │ (land)  (forest) (crops) (livestock) (manure) (N2O) │
+  └──┬──────────┬──────────┬────────────────────────────┘
+     │food loss │crop yield│biogas
+     │dung→MSW  │mass      │
+     ▼          ▼          ▼
+  ┌──────────────────┐
+  │ Step 2: CircEcon │──────────────────────────────────┐
+  │ WALI→TRWW→WASO   │                                  │
+  └──┬───────────────┘                                  │
+     │recycled waste                                    │
+     ▼                                                  │
+  ┌──────────────────┐                                  │
+  │ Step 3: IPPU     │                                  │
+  │ cement,HFC,metals│                                  │
+  └──┬───────────────┘                                  │
+     │production volumes                                │
+     ▼                                                  ▼
+  ┌───────────────────────────────────────────────────────┐
+  │ Step 4: EnergyConsumption                             │
+  │ CCSQ → INEN → SCOE → TRNS                            │
+  │ (CCS) (industry) (buildings) (transport)              │
+  └──┬────────────────────────────────────────────────────┘
+     │fuel demand (electricity, gas, oil, coal, biomass)
+     ▼
+  ┌───────────────────────────────────────────────────────┐
+  │ Step 5: EnergyProduction (NemoMod LP)                 │
+  │ ENTC + ENFU + ENST                                    │
+  │ Dispatches generation. coal/gas burn, imports, builds │
+  └──┬────────────────────────────────────────────────────┘
+     │production volumes, imports, exports
+     ▼
+  ┌───────────────────────────────────────────────────────┐
+  │ Step 6: FugitiveEmissions (FGTV)                      │
+  │ CH4 from fuel extraction, refining, flaring           │
+  └───────────────────────────────────────────────────────┘
 ```
 
 ### Critical Cascades
