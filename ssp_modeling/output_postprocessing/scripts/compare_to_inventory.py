@@ -309,6 +309,91 @@ def run_diagnostics(targets, diff, model_row, full_model, tp, min_mag):
                         add(rid, cat, gas, sec, inv, mod, 'TRAJECTORY', 'MEDIUM',
                             f'Changed {g*100:+.0f}% from tp=0 ({v0:.3f}) to tp={tp} ({mod:.3f}).')
 
+    # --- Growth / elasticity diagnostics ---
+    if full_model is not None and tp > 0:
+        tp0_row = full_model[full_model['time_period'] == 0]
+        tp_row = full_model[full_model['time_period'] == tp]
+        if len(tp0_row) > 0 and len(tp_row) > 0:
+            tp0_row, tp_row = tp0_row.iloc[0], tp_row.iloc[0]
+            # GDP growth
+            gdp_col = 'gdp_mmm_usd'
+            gdp0 = tp0_row.get(gdp_col, 0)
+            gdp_t = tp_row.get(gdp_col, 0)
+            gdp_growth = (gdp_t / gdp0 - 1) if gdp0 > 0 else 0
+            # Population growth
+            pop0 = tp0_row.get('population_gnrl_rural', 0) + tp0_row.get('population_gnrl_urban', 0)
+            pop_t = tp_row.get('population_gnrl_rural', 0) + tp_row.get('population_gnrl_urban', 0)
+            pop_growth = (pop_t / pop0 - 1) if pop0 > 0 else 0
+
+            if gdp_growth > 0.02:  # Only flag if GDP actually grew
+                # Check each sector's implicit elasticity
+                for sec_name, sec_grp in diff.groupby('sector'):
+                    vl_all = []
+                    for _, r in sec_grp.iterrows():
+                        t = targets[targets['ID'] == r['ID']]
+                        if len(t) > 0:
+                            vl_all.extend(parse_vars(t.iloc[0]))
+                    vl_all = list(set(vl_all))
+                    if not vl_all:
+                        continue
+                    s0 = sum(tp0_row.get(v, 0) for v in vl_all if v in tp0_row.index)
+                    st = sum(tp_row.get(v, 0) for v in vl_all if v in tp_row.index)
+                    if abs(s0) < min_mag:
+                        continue
+                    sec_growth = (st / s0 - 1)
+                    impl_elast = sec_growth / gdp_growth if abs(gdp_growth) > 0.01 else 0
+
+                    # Flag: sector declines while GDP grows
+                    if sec_growth < -0.05 and gdp_growth > 0.05:
+                        ann_s = ((st/s0)**(1/tp) - 1) * 100 if s0 > 0 else 0
+                        ann_g = ((gdp_t/gdp0)**(1/tp) - 1) * 100
+                        add(sec_name, sec_name, 'ALL', sec_name, 0, 0,
+                            'DECLINING_WITH_GDP_GROWTH', 'MEDIUM',
+                            f'{sec_name} emissions {ann_s:+.1f}%/yr while GDP grows {ann_g:+.1f}%/yr '
+                            f'(implicit elasticity={impl_elast:+.2f}). Check production elasticities.')
+
+                    # Flag: sector grows much slower than GDP (elasticity < 0.3)
+                    elif 0 < impl_elast < 0.3 and abs(sec_growth) > 0.01 and sec_growth > 0:
+                        ann_s = ((st/s0)**(1/tp) - 1) * 100
+                        ann_g = ((gdp_t/gdp0)**(1/tp) - 1) * 100
+                        add(sec_name, sec_name, 'ALL', sec_name, 0, 0,
+                            'GROWTH_LAG', 'MEDIUM',
+                            f'{sec_name} grows {ann_s:+.1f}%/yr vs GDP {ann_g:+.1f}%/yr '
+                            f'(implicit elasticity={impl_elast:+.2f}). May underestimate future emissions.')
+
+                    # Flag: sector grows much faster than GDP (elasticity > 2.5)
+                    elif impl_elast > 2.5 and sec_growth > 0.10:
+                        ann_s = ((st/s0)**(1/tp) - 1) * 100
+                        ann_g = ((gdp_t/gdp0)**(1/tp) - 1) * 100
+                        add(sec_name, sec_name, 'ALL', sec_name, 0, 0,
+                            'GROWTH_EXCEEDS_GDP', 'MEDIUM',
+                            f'{sec_name} grows {ann_s:+.1f}%/yr vs GDP {ann_g:+.1f}%/yr '
+                            f'(implicit elasticity={impl_elast:+.2f}). Check demand drivers.')
+
+                # Population-driven check for waste and residential
+                if pop_growth > 0.01:
+                    for sec_name, pop_sectors in [('4 - Waste', ['waso', 'trww'])]:
+                        vl_pop = []
+                        sec_rows = diff[diff['sector'].str.startswith(sec_name[:3])]
+                        for _, r in sec_rows.iterrows():
+                            t = targets[targets['ID'] == r['ID']]
+                            if len(t) > 0:
+                                vl_pop.extend(parse_vars(t.iloc[0]))
+                        vl_pop = list(set(vl_pop))
+                        if not vl_pop:
+                            continue
+                        w0 = sum(tp0_row.get(v, 0) for v in vl_pop if v in tp0_row.index)
+                        wt = sum(tp_row.get(v, 0) for v in vl_pop if v in tp_row.index)
+                        if abs(w0) < min_mag:
+                            continue
+                        waste_growth = (wt / w0 - 1)
+                        ratio = waste_growth / pop_growth if pop_growth > 0.01 else 0
+                        if ratio > 3.0:
+                            add(sec_name, sec_name, 'ALL', sec_name, 0, 0,
+                                'POPULATION_MISMATCH', 'MEDIUM',
+                                f'{sec_name} grows {waste_growth*100:+.0f}% vs population {pop_growth*100:+.0f}% '
+                                f'({ratio:.1f}x faster). Check waste-per-capita trajectory.')
+
     for (_, sec), grp in diff.groupby(['subsector', 'sector']):
         co2 = grp[grp['gas'] == 'CO2']
         if len(co2) == 0 or co2.iloc[0]['inventory'] < min_mag:
