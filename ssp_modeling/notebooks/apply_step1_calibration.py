@@ -383,6 +383,25 @@ df['frac_lvst_mm_cattle_dairy_liquid_slurry'] = 0.02          # Reduced from 0.0
 # Cross-check: FAO data shows 86% pasture for Morocco dairy, supporting higher paddock allocation.
 print("  Dairy cattle MM: pasture=0.87, daily=0.05, compost=0.05, solid=0.01, liquid=0.02")
 
+# Chicken manure management: template has Bulgarian fractions (24.7% liquid slurry)
+# Morocco poultry: ~30% traditional (backyard/paddock), ~70% modern (poultry_manure with litter)
+# Source: IPCC Table 10A-7 p.79 "Africa/Middle East": poultry_manure=76%, paddock=20%, daily_spread=4%
+# Verified: NIR doesn't give species-specific MM fractions, using IPCC Africa defaults
+for c in [c for c in df.columns if 'frac_lvst_mm_chickens_' in c]:
+    df[c] = 0.0
+df['frac_lvst_mm_chickens_poultry_manure'] = 0.76  # Source: IPCC Table 10A-7 Africa
+df['frac_lvst_mm_chickens_paddock_pasture_range'] = 0.20
+df['frac_lvst_mm_chickens_daily_spread'] = 0.04
+print("  Chicken MM: IPCC 10A-7 Africa: poultry_manure=0.76, paddock=0.20, daily=0.04")
+
+# Pig manure management: template has 39.5% liquid slurry (European intensive)
+# Morocco has ~8,000 pigs (tiny). Setting to IPCC Africa default (mostly paddock)
+for c in [c for c in df.columns if 'frac_lvst_mm_pigs_' in c]:
+    df[c] = 0.0
+df['frac_lvst_mm_pigs_paddock_pasture_range'] = 0.90
+df['frac_lvst_mm_pigs_dry_lot'] = 0.10
+print("  Pig MM: paddock=0.90, dry_lot=0.10 (tiny pop, minimal impact)")
+
 # Non-dairy cattle: IPCC Table 10A-5, page 77, "Africa" row
 #   Drylot=1%, Pasture=95%, Daily_spread=1%, Burned=3%
 for c in [c for c in df.columns if 'frac_lvst_mm_cattle_nondairy_' in c]:
