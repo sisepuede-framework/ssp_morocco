@@ -866,9 +866,83 @@ Trajectory gap analysis revealed structural divergence from SNBC Reference:
 - Full design document: `ssp_modeling/notebooks/bau_scenario_design.md`
 - Implementation deferred to dedicated BAU scenario session
 
+### BAU Scenario Experiment (reverted — kept for reference)
+
+Implemented `apply_step2_bau_scenario.py` with direct CSV modifications. Achieved SNBC trajectory match but reverted in favor of transformation-based approach. All parameter values and results documented here for future use.
+
+**Coal Retirement Schedule (SNBC p.53-54, Figure 20):**
+```python
+# Morocco actual fleet: 2.7 GW (JORF Lasfar 1320 MW + Safi 1386 MW)
+nemomod_entc_residual_capacity_pp_coal_gw:
+  tp=0: 2.70, tp=7: 2.70, tp=15: 2.70, tp=20: 2.00, tp=25: 1.00, tp=30: 0.30, tp=33: 0.00
+nemomod_entc_total_annual_max_capacity_investment_pp_coal_gw: 0 from tp=10 (2025)
+nemomod_entc_frac_min_share_production_pp_coal:
+  tp=0: 0.65, tp=7: 0.65, tp=8: 0.55, tp=10: 0.40, tp=13: 0.25, tp=15: 0.15, tp=20: 0.05, tp=23: 0.00
+# KEY LESSON: MSP must decline WELL AHEAD of capacity, otherwise INFEASIBLE.
+# First run with MSP=0.50 at tp=15 caused INFEASIBLE. Fixed by dropping to 0.15.
+```
+
+**Renewable Capacity Ramp (SNBC Figure 19 p.54):**
+```python
+nemomod_entc_residual_capacity_pp_solar_gw:
+  tp=0: 0.02, tp=7: 0.94, tp=10: 3.0, tp=13: 4.5, tp=15: 6.0, tp=20: 12.0, tp=25: 18.0, tp=35: 30.0, tp=45: 40.0
+nemomod_entc_residual_capacity_pp_wind_gw:
+  tp=0: 1.11, tp=7: 2.04, tp=15: 4.0, tp=25: 8.0, tp=35: 15.0, tp=45: 18.0
+nemomod_entc_residual_capacity_pp_gas_gw:
+  tp=0: 2.63, tp=7: 2.93, tp=15: 3.5, tp=25: 4.0, tp=35: 5.0
+nemomod_entc_residual_capacity_pp_hydropower_gw:
+  tp=0: 2.64, tp=7: 2.95, tp=15+: 3.0
+```
+
+**Demand Elasticities (time-varying, tp=8+ only):**
+```python
+# Transport (SNBC implied: 1.47, motorization wave)
+elasticity_trde_pkm_to_gdppc_private_and_public: 0.80 (tp=0-7) → 1.40 (tp=8+)
+elasticity_trde_pkm_to_gdppc_regional: 0.80 → 1.40
+elasticity_trde_mtkm_to_gdp_freight: 0.80 → 1.20
+
+# Commercial SCOE (SNBC: 1.5-2.0, NIR: 0.30)
+elasticity_scoe_*_commercial_municipal_heat_energy_to_gdppc: 0.00 → 0.50
+elasticity_scoe_*_commercial_municipal_elec_appliances_to_gdppc: 0.00 → 0.50
+
+# Residential SCOE (SNBC: modest growth due to electrification)
+elasticity_scoe_*_residential_heat_energy_to_gdppc: 0.96 → 0.30
+elasticity_scoe_*_residential_elec_appliances_to_gdppc: 0.96 → 0.80
+```
+
+**IPPU Elasticities (constant, all time periods):**
+```python
+elasticity_ippu_cement_production_to_gdp: -2.00 → +0.30
+elasticity_ippu_chemicals_production_to_gdp: 0.50 → 0.80  # OCP expansion
+elasticity_ippu_metals/glass/paper/etc: 0.50 → 0.80
+elasticity_ippu_lime_and_carbonite: 0.50 → 0.30  # Tracks cement
+elasticity_ippu_wood: 0.50 (unchanged)
+prodinit_ippu_cement_tonne: 14,250,000 → 10,224,000  # Back-calc for elast=0.30 to hit 4.547 MtCO2e at tp=7
+```
+
+**Results before reverting:**
+| Metric | Value |
+|--------|-------|
+| tp=7 NIR error | 7.82 MtCO2e (15/34 within 15%) |
+| 2030 vs SNBC | 115 Mt vs 124 Mt (-7%) |
+| 2050 vs SNBC | 135 Mt vs 150 Mt (-10%) |
+| ENTC 2050 | 3.9 Mt (coal retired, was 112 Mt without retirement) |
+| NemoMod | ALL OPTIMAL |
+
+**Key lessons:**
+1. MSP must decline faster than capacity — first attempt INFEASIBLE
+2. Constant IPPU elasticities affect historical period — need prodinit compensation
+3. Residential heat elasticity is the most sensitive lever for buildings overshoot
+4. FGTV/Other = 10 Mt structural gap (FGTV EFs zeroed)
+5. INEN gap (-9 Mt) needs `demscalar_ippu_chemicals` for desalination step-changes
+6. Time-varying elasticities confirmed working for SCOE/transport (toolbox.py line 3141)
+
+**Decision: reverted to clean baseline (step0 + step1 only).** BAU trajectory work should go through the transformation system, not direct CSV modifications.
+
 ### Final Status (end of session 2026-03-12)
 - **Historical calibration: 7.29 MtCO2e** (34 categories, no LULUCF)
 - **Within 15%: 16/34 (47%)**
 - **Within 25%: 22/34 (65%)**
 - **NemoMod: ALL OPTIMAL**
-- **BAU trajectory: documented gap, design brief created, implementation pending**
+- **BAU trajectory: reverted, design docs + parameter values preserved in log**
+- **Pipeline: apply_step0_verified.py → apply_step1_calibration.py → run_calibration0.py**
