@@ -264,22 +264,45 @@ For arid/semi-arid countries, wetland transitions (`pij_lndu_*_to_wetlands`) sho
 `lndu_reallocation_factor` (eta): multi-sector lever. **Sweep after all other AFOLU parameters are set** (0.00-0.40, step 0.05). Higher eta preserves pasture (better livestock) but increases land conversion (higher soil N2O/CO2). Pick eta minimizing TOTAL error.
 
 ### 6.12 LULUCF (Optional)
-**Structural warning**: LULUCF is the hardest sector to calibrate. SISEPUEDE models land-use transitions via Markov chain, not carbon stock accounting. Expect structural gaps of 5-15 MtCO2e even after calibration. Document all gaps.
+**Structural warning**: LULUCF is the hardest sector to calibrate. SISEPUEDE models land-use transitions via a Markov chain (transition probabilities between land types each period), not carbon stock accounting. The model tracks flows from conversion, not standing biomass stocks. Expect structural gaps of 5-15 MtCO2e even after calibration. Document all gaps.
 
-**4.A Forest Land**:
-- Read NIR LULUCF table for CRF 4.A target (CO2 removals + emissions).
-- `frst_sequestration_*` parameters scale the carbon uptake rate. Derive from NIR forest area x per-hectare sequestration rate.
-- HWP: Wood production (`prodinit_ippu_wood_tonne`) creates carbon pools that release CO2 over decades. If HWP CO2 shows as a large positive emission in FRST outputs, check wood production volume against FAO/NIR.
-- Fire emissions: SISEPUEDE may not model fire. If NIR 4.A includes fire, this is a structural gap.
+**Why it's hard**: LULUCF emissions depend on three things SISEPUEDE handles differently from other sectors:
+1. **Land area transitions** — driven by `pij_lndu_*` transition probabilities and `lndu_reallocation_factor` (eta). These determine HOW MUCH land converts each period.
+2. **Carbon density per hectare** — SOC reference values, biomass factors, and sequestration rates. These determine HOW MUCH CO2 each hectare of conversion emits/removes.
+3. **Historical accumulation** — forest carbon pools and HWP decay depend on decades of history that the model starts fresh at tp=0.
 
-**4.B-4.C Cropland/Grassland SOC**:
+**4.A Forest Land** (typically the largest LULUCF category):
+- Read NIR LULUCF table for CRF 4.A target. This is usually a NET REMOVAL (negative CO2).
+- The crosswalk maps 4.A to: `frst_sequestration_primary`, `frst_sequestration_secondary`, `frst_sequestration_mangroves`, `frst_harvested_wood_products`, `frst_forest_fires`, plus CH4 from fires.
+- **Sequestration calibration**: `ef_frst_sequestration_*_kt_co2_ha` controls the per-hectare uptake rate. Scale these to match NIR 4.A, but first decompose the NIR target — does it include HWP? Fire? If the NIR nets fire+HWP into 4.A (common), you need to account for what SISEPUEDE models vs what it doesn't.
+- **HWP cascade**: `prodinit_ippu_wood_tonne` feeds INEN energy demand AND creates FRST carbon pools. Getting wood production wrong creates errors in BOTH energy (ENTC CO2 via electricity demand) AND forestry (HWP CO2 release). Check wood production against FAO roundwood data.
+- **Fire**: SISEPUEDE models fire emissions (CH4) from forests but may understate fire CO2. If NIR 4.A includes large fire CO2, this is a structural gap — document it.
+
+**4.B Cropland** (often a net removal from perennial biomass):
+- Maps to: `agrc_biomass_fruits`, `agrc_biomass_nuts`, `agrc_biomass_other_woody_perennial`, plus `lndu_drained_organic_soils_croplands`.
+- Perennial crop expansion (olives, citrus, argan) creates biomass sinks. The template may understate these if the base country has less perennial agriculture.
+- Drained organic soils: if the country has negligible peatland drainage, this component should be near zero.
+
+**4.C Grassland**:
+- Maps to: `lndu_biomass_sequestration_grasslands`, `lndu_biomass_sequestration_pastures`, `lndu_drained_organic_soils_pastures`.
+- Driven by grassland/pasture area changes from the land use transition matrix. If pasture is expanding (higher eta), grassland sequesters more; if contracting, it emits.
+
+**4.B-4.C SOC (Soil Organic Carbon)**:
 - Read `ipcc_tables/V4_Ch2_Table2.3_SOC_reference.csv` for the correct climate/soil zone SOC reference value.
 - For arid/semi-arid countries, SOC ref ~38 tC/ha (NOT 50-80 for humid climates). Verify against NIR methodology.
 - SOC change = (SOC_new - SOC_old) x area converted. Even 5 tC/ha error x 100 kha = 1.8 MtCO2e.
+- **Sensitivity trap**: SOC factors are the single most sensitive AFOLU parameters. Small changes (5-10%) cause multi-MtCO2e swings. Only adjust with strong NIR evidence.
 
-**4.D-4.E Wetlands/Settlements**: Often small; verify against NIR before investing effort.
+**4.D Wetlands**: Maps to `lndu_biomass_sequestration_wetlands` + `lndu_wetlands` CH4. For arid countries, typically small. Verify `pij_lndu_*_to_wetlands` = 0 if no wetland expansion.
 
-**Strategy**: Set `INCLUDE_LULUCF = True/False` in the targets build script. Calibrate LULUCF AFTER all other sectors are done — this isolates LULUCF errors from the rest of the cascade.
+**4.E Settlements**: Maps to `lndu_biomass_sequestration_settlements`. Usually small; driven by urban expansion consuming forest/cropland.
+
+**Strategy**:
+1. Set `INCLUDE_LULUCF = True/False` in the targets build script.
+2. Calibrate LULUCF AFTER all other sectors — this isolates LULUCF errors from the energy/waste/IPPU cascade.
+3. Start with 4.A (largest). Adjust `ef_frst_sequestration_*` scale to match NIR net removal.
+4. Then 4.B-4.C. These are coupled through the transition matrix — changes to cropland area affect grassland and vice versa.
+5. Accept structural gaps in fire CO2, historical HWP accumulation, and SOC dynamics. Document each with rationale.
 
 ### 6.13 Final Pre-Run Checks
 1. inf/NaN scan: must be 0
@@ -535,3 +558,13 @@ Error: XX.XX MtCO2e | <=15%: N | <=25%: N | NemoMod: OPTIMAL
 - [ ] Review HIGH diagnostics (zero outputs, sign mismatches, 10x errors)
 - [ ] Compare against previous run — flag regressions >1 MtCO2e
 - [ ] Log in calibration_log.md
+
+---
+
+## Section 14: Known Protocol Limitations
+
+- **Verification is weaker than ideal.** Step 6 ("independent verification") is a cross-check against a second source, not a true double-blind test. Subagents share conversation context and cannot be given restricted information. This means the agent has less guardrail against hallucinated or confirmation-biased values than a protocol with truly independent reviewers. The online data cross-check protocol partially compensates, but for high-stakes values (NDC targets, emission factors driving >1 MtCO2e), prefer sourcing from two DIFFERENT file types (e.g., NIR PDF + FAO CSV) rather than re-reading the same file.
+
+- **No worked examples.** This protocol states rules but doesn't show annotated examples of applying them. The original version included concrete numbers (e.g., "215 PJ of phantom natural gas exports from a Bulgarian template caused 0.72 MtCO2e of spurious FGTV emissions"). Rules are more general but examples are more memorable. If an agent struggles with a specific sector, consider adding 2-3 annotated before/after examples to `calibration_log.md` showing: the diff report error, the DAG trace, the parameter identified, the source cited, and the result after fixing.
+
+- **LULUCF guidance is best-effort.** Section 6.12 is the most detailed sector guide, but LULUCF calibration depends heavily on the country's land use history, which SISEPUEDE starts fresh at tp=0. Historical forest degradation, decades of HWP accumulation, and legacy SOC depletion cannot be captured. Expect 4.A (Forest) and 4.B (Cropland) to have persistent structural gaps even after all parameters are set correctly.
