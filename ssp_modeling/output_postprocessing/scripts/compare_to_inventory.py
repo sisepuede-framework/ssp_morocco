@@ -94,6 +94,11 @@ def load_targets(path):
 
 def load_model_row(path, tp, strategy=0):
     df = pd.read_csv(path)
+    if 'time_period' not in df.columns:
+        raise SystemExit(
+            f"ERROR: '{path.name}' has no 'time_period' column.\n"
+            f"  --output must point to WIDE_INPUTS_OUTPUTS.csv, not emissions_table_baseline.csv"
+        )
     if 'primary_id' in df.columns:
         df = df[(df['primary_id'] == strategy) & (df['time_period'] == tp)]
     else:
