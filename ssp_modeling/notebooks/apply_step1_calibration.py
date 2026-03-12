@@ -34,7 +34,7 @@ print("\n=== §6.7 ENTC ===")
 # With agri=32.9 PJ and agri elec=27%, eff=0.25 gives ENTC 29.8 Mt (target 32.2)
 # Reducing to 0.23 to compensate for lower electricity demand from agriculture
 # Source: empirically calibrated to match NIR T19: 1.A.1.a CO2 = 32,217 Gg
-df['efficfactor_entc_technology_fuel_use_pp_coal'] = 0.23
+df['efficfactor_entc_technology_fuel_use_pp_coal'] = 0.22  # Reduced from 0.23: removing agri electricity lowered demand
 df['efficfactor_entc_technology_fuel_use_pp_gas'] = 0.45
 df['efficfactor_entc_technology_fuel_use_pp_oil'] = 0.35
 print("  Coal eff: 0.27 (calibrated), Gas: 0.45 (NIR T29), Oil: 0.35 (NIR T29)")
@@ -436,11 +436,17 @@ df['prodinit_ippu_lime_and_carbonite_tonne'] = 200400
 print("  Lime: -> 200,400 (NIR Table 61 p.166)")
 
 # Non-dairy cattle enteric EF: 31 (NIR Table 88 p.202, IPCC developing country default)
-# Verified by independent agent: NIR uses EF=31 and gets 9,100 Gg total.
-# Gap explanation: NIR includes camels (57,500 × 46 = ~74 Gg) and asses (950,000 × 10 = ~266 Gg)
-# that SISEPUEDE doesn't model. Total unmodeled species ≈ 340 Gg CO2e.
 df['ef_lvst_entferm_cattle_nondairy_kg_ch4_head'] = 31.0
 print("  Non-dairy EF: -> 31 (NIR Table 88 p.202, IPCC developing country default)")
+
+# Unmodeled species as equivalent horses (model creator guidance: treat as horses)
+# NIR includes camels (57,500 × 46 kg CH4 = 74 Gg CO2e) and asses/donkeys (950,000 × 10 kg = 266 Gg)
+# that SISEPUEDE doesn't model. Add as equivalent horse population at EF=18 kg CH4/head.
+# Source: NIR Tableau 83 p.189, IPCC Table 10.10/10.11 for EFs, FAO for populations
+extra_horses = (57500 * 46 + 950000 * 10) / 18  # = 674,722 equivalent horses
+current_horses = df['pop_lvst_initial_horses'].iloc[0]
+df['pop_lvst_initial_horses'] = current_horses + extra_horses
+print(f"  Horses: {current_horses:.0f} -> {current_horses + extra_horses:.0f} (includes camels+asses as equiv horses)")
 
 # SCOE commercial elasticity: 0.0 (SNBC p.153-154 implicit assumption)
 # Empirical: IEA/WB 2015-2022 log-log = -0.29 (biomass-driven)
@@ -530,7 +536,7 @@ print("  Gas exports: already zeroed in step 0 (Gate 7b)")
 agri_col = 'consumpinit_inen_energy_total_pj_agriculture_and_livestock'
 if agri_col in df.columns:
     old = df[agri_col].iloc[0]
-    df[agri_col] = 32.879  # Source: NIR T43 p.132: 32,879 TJ in 2015
+    df[agri_col] = 34.386  # Source: NIR T43 p.132: interpolated 2015 from 2014=32,879 + 2016=35,893
     print(f"  Agriculture energy: {old:.1f} -> 32.9 PJ (NIR T43 p.132)")
     print(f"    CASCADE WARNING: ENTC electricity demand will decrease. Coal efficiency may need adjustment.")
 
