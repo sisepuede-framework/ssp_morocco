@@ -855,9 +855,20 @@ Model grows at ~1.3%/yr vs SNBC ~2.5%/yr. Gap widens to 64 Mt by 2050.
 | 1.A.4.c:CO2 Agri Energy | -0.70 | Partially structural: model growth from 34.4 PJ at tp=0 may not reach 38.6 PJ at tp=7 fast enough |
 | 4.D:CH4 Wastewater | +0.36 | Could tune treatment fractions, but risk overfitting |
 
-### Current Calibration Status
-- **Total error: 7.29 MtCO2e** (34 categories, no LULUCF)
+### BAU Scenario Design (separate workstream)
+Trajectory gap analysis revealed structural divergence from SNBC Reference:
+- Model grows 1.3%/yr vs SNBC 2.5%/yr → 32% under by 2050
+- Root causes: no coal retirement, low transport/industry elasticities, IPPU declining
+- SNBC-derived elasticities extracted from Annex 1 (pp.154-162)
+- Both calibration + SISEPUEDE experts verified: time-varying elasticities supported in source code
+- Coal retirement: `nemomod_entc_residual_capacity_pp_coal_gw` trajectory (code-verified)
+- New levers discovered: `demscalar_ippu_{industry}` for production step-changes
+- Full design document: `ssp_modeling/notebooks/bau_scenario_design.md`
+- Implementation deferred to dedicated BAU scenario session
+
+### Final Status (end of session 2026-03-12)
+- **Historical calibration: 7.29 MtCO2e** (34 categories, no LULUCF)
 - **Within 15%: 16/34 (47%)**
 - **Within 25%: 22/34 (65%)**
 - **NemoMod: ALL OPTIMAL**
-- **Trajectory: grows too slowly vs SNBC (investigating elasticities)**
+- **BAU trajectory: documented gap, design brief created, implementation pending**
