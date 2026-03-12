@@ -121,18 +121,20 @@ set_trajectory('nemomod_entc_residual_capacity_pp_hydropower_gw', hydro_mileston
 # ═══════════════════════════════════════════════════════════════════════════
 print("\n=== Step 2: Transport Elasticity ===")
 
+# SNBC: transport 22→55 Mt by 2050 (CAGR 3.3%/yr). Implied elasticity ~1.47.
+# At 1.20 model reached 38.8 Mt (under by 16 Mt). Increasing to 1.40.
 for col in ['elasticity_trde_pkm_to_gdppc_private_and_public',
             'elasticity_trde_pkm_to_gdppc_regional']:
     old = df[col].iloc[0]
     for t in range(8, N_TP):
-        df.loc[t, col] = 1.20
-    print(f"  {col}: {old:.2f} (tp=0-7) → 1.20 (tp=8+)")
+        df.loc[t, col] = 1.40
+    print(f"  {col}: {old:.2f} (tp=0-7) → 1.40 (tp=8+)")
 
 col_freight = 'elasticity_trde_mtkm_to_gdp_freight'
 old = df[col_freight].iloc[0]
 for t in range(8, N_TP):
-    df.loc[t, col_freight] = 1.00
-print(f"  {col_freight}: {old:.2f} (tp=0-7) → 1.00 (tp=8+)")
+    df.loc[t, col_freight] = 1.20
+print(f"  {col_freight}: {old:.2f} (tp=0-7) → 1.20 (tp=8+)")
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -144,6 +146,16 @@ print(f"  {col_freight}: {old:.2f} (tp=0-7) → 1.00 (tp=8+)")
 # Others: 0.80 (SNBC industry energy elasticity 1.12)
 # ═══════════════════════════════════════════════════════════════════════════
 print("\n=== Step 3: IPPU Elasticities ===")
+
+# Adjust cement initial production for new elasticity
+# With elasticity -2.0 (step1), prodinit=14.25M gives 12.49M at tp=7 (NIR T61)
+# With elasticity +0.30, growth factor tp0→tp7 = 1.041 (from GDP trajectory)
+# Required prodinit = 12,490,000 / 1.041 = 11,998,000
+# Source: NIR T61 p.166 (target 12.49M at 2022) + GDP trajectory
+# Back-calc: cement CO2 at tp=7 was 5.336 with prodinit=11.998M. Target: 4.547.
+# Scale: 11,998,000 * 4.547/5.336 = 10,224,000
+df['prodinit_ippu_cement_tonne'] = 10_224_000
+print(f"  Cement prodinit: 14,250,000 → 10,224,000 (back-calc for elast=0.30, target 4.547 MtCO2e at tp=7)")
 
 ippu_elasticities = {
     'cement': 0.30,           # SNBC per-capita, NIR -0.42, 2024 rebound +7.2%
@@ -191,13 +203,22 @@ for col in ['elasticity_scoe_enerdem_per_mmmgdp_commercial_municipal_heat_energy
 # ═══════════════════════════════════════════════════════════════════════════
 print("\n=== Step 5: Residential Elasticity Correction ===")
 
-for col in ['elasticity_scoe_enerdem_per_hh_residential_heat_energy_to_gdppc',
-            'elasticity_scoe_enerdem_per_hh_residential_elec_appliances_to_gdppc']:
+# SNBC: residential emissions 12→17 Mt = +42% over 28 years = 1.25%/yr
+# But residential energy demand +110% = 2.7%/yr. Difference is electrification.
+# In BAU (no electrification policy), emissions track energy demand more closely.
+# However SNBC Reference also shows modest shift to electricity even without policy.
+# Setting 0.50 for heat (fossil-intensive) and 0.80 for appliances (electricity).
+# Residential heat (fossil-intensive): keep low since SNBC Reference shows only
+# modest emission growth (12→17 Mt) despite 110% energy demand increase.
+# The difference is electrification shift even in BAU.
+# Heat elasticity 0.30: fossil demand grows slowly. Appliances 0.80: electricity grows faster.
+for col, val in [('elasticity_scoe_enerdem_per_hh_residential_heat_energy_to_gdppc', 0.30),
+                  ('elasticity_scoe_enerdem_per_hh_residential_elec_appliances_to_gdppc', 0.80)]:
     old_0 = df[col].iloc[0]
     old_8 = df[col].iloc[8] if 8 < N_TP else old_0
     for t in range(8, N_TP):
-        df.loc[t, col] = 0.70
-    print(f"  {col.replace('elasticity_scoe_enerdem_per_hh_',''):50s}: tp0={old_0:.2f}, tp8={old_8:.3f} → 0.70 (tp=8+)")
+        df.loc[t, col] = val
+    print(f"  {col.replace('elasticity_scoe_enerdem_per_hh_',''):50s}: tp0={old_0:.2f}, tp8={old_8:.3f} → {val:.2f} (tp=8+)")
 
 
 # ═══════════════════════════════════════════════════════════════════════════
