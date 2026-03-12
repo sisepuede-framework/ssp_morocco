@@ -438,7 +438,7 @@ SISEPUEDE uses ONE shared EF column (`ef_enfu_stationary_combustion_tonne_ch4_pe
 ALL combustion EFs (`ef_enfu_*`) are shared across CCSQ, INEN, SCOE, and ENTC. Changing a fuel's CO2, CH4, or N2O EF affects every sector that burns that fuel. To adjust ENTC emissions independently, use the EAR scalar or efficiency factor — not the base fuel EF.
 
 ### Template Artifacts
-- **Dual biomass EF columns**: SISEPUEDE has `ef_enfu_*_fuel_biomass` AND `ef_enfu_*_fuel_solid_biomass`. Both must be set or one keeps the base country default.
+- **Biomass naming**: `solid_biomass` appears in INEN/SCOE demand fraction columns but maps to `fuel_biomass`. Emission factors use only `ef_enfu_*_fuel_biomass`. Do not confuse demand fractions with EF columns.
 - **Metal CCS capture**: Template may have `gasrf_ippu_co2_capture_metals = 0.90` (base country CCS). Zero this for countries without CCS.
 - **IEA scaling overrides**: Production volumes set early get overridden by the IEA energy scaling block. Set production AFTER scaling.
 - **Agriculture energy**: `consumpinit_inen_energy_total_pj_agriculture_and_livestock` may be 2-3x actual in template. Verify against NIR.
