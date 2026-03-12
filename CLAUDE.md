@@ -298,7 +298,7 @@ For arid/semi-arid countries, wetland transitions (`pij_lndu_*_to_wetlands`) sho
 **4.E Settlements**: Maps to `lndu_biomass_sequestration_settlements`. Usually small; driven by urban expansion consuming forest/cropland.
 
 **Strategy**:
-1. Set `INCLUDE_LULUCF = True/False` in the targets build script.
+1. Set `INCLUDE_LULUCF = False` in the targets build script (default). Enable only after all other sectors are calibrated.
 2. Calibrate LULUCF AFTER all other sectors — this isolates LULUCF errors from the energy/waste/IPPU cascade.
 3. Start with 4.A (largest). Adjust `ef_frst_sequestration_*` scale to match NIR net removal.
 4. Then 4.B-4.C. These are coupled through the transition matrix — changes to cropland area affect grassland and vice versa.
@@ -561,10 +561,40 @@ Error: XX.XX MtCO2e | <=15%: N | <=25%: N | NemoMod: OPTIMAL
 
 ---
 
-## Section 14: Known Protocol Limitations
+## Section 14: Verification Best Practices
 
-- **Verification is weaker than ideal.** Step 6 ("independent verification") is a cross-check against a second source, not a true double-blind test. Subagents share conversation context and cannot be given restricted information. This means the agent has less guardrail against hallucinated or confirmation-biased values than a protocol with truly independent reviewers. The online data cross-check protocol partially compensates, but for high-stakes values (NDC targets, emission factors driving >1 MtCO2e), prefer sourcing from two DIFFERENT file types (e.g., NIR PDF + FAO CSV) rather than re-reading the same file.
+For high-stakes values (NDC targets, emission factors driving >1 MtCO2e), source from two DIFFERENT file types rather than re-reading the same file. Examples:
+- Verify an IPCC EF from `ipcc_tables/*.csv` against the NIR methodology section (different document, same data point)
+- Verify IEA generation mix from `external_data/iea_comprehensive/` against SNBC energy chapter figures
+- Verify FAO livestock populations against NIR agriculture chapter tables
+- Verify cement production from BUR3 process CO2 back-calculation against SNBC industry chapter
 
-- **No worked examples.** This protocol states rules but doesn't show annotated examples of applying them. The original version included concrete numbers (e.g., "215 PJ of phantom natural gas exports from a Bulgarian template caused 0.72 MtCO2e of spurious FGTV emissions"). Rules are more general but examples are more memorable. If an agent struggles with a specific sector, consider adding 2-3 annotated before/after examples to `calibration_log.md` showing: the diff report error, the DAG trace, the parameter identified, the source cited, and the result after fixing.
+If two independent sources disagree by >10%, investigate which is more authoritative before proceeding.
 
-- **LULUCF guidance is best-effort.** Section 6.12 is the most detailed sector guide, but LULUCF calibration depends heavily on the country's land use history, which SISEPUEDE starts fresh at tp=0. Historical forest degradation, decades of HWP accumulation, and legacy SOC depletion cannot be captured. Expect 4.A (Forest) and 4.B (Cropland) to have persistent structural gaps even after all parameters are set correctly.
+---
+
+## Section 15: Worked Examples
+
+### Example 1: Phantom Fuel Exports (FGTV)
+**Diff report**: FGTV CH4 = 0.72 MtCO2e, target = 0.0 MtCO2e.
+**DAG trace**: FGTV ← EnergyProduction ← NemoMod dispatching domestic gas production to satisfy exports.
+**Investigation**: `exports_enfu_pj_fuel_natural_gas = 215` in template. Bulgaria exports gas; the calibration country does not. IEA trade data (`external_data/iea_comprehensive/`) confirms zero gas exports.
+**Fix**: Set `exports_enfu_pj_fuel_natural_gas = 0` across all time periods.
+**Result**: FGTV CH4 dropped to ~0.0 MtCO2e. One line, one column.
+**Lesson**: Always check Gate 7b. Template fuel exports are the most common source of phantom FGTV emissions.
+
+### Example 2: Landfill Gas Recovery (Waste CH4)
+**Diff report**: Waste CH4 = 0.5 MtCO2e, target = 4.25 MtCO2e (undershooting by 3.75).
+**DAG trace**: WASO ← MCF x waste generation x DOC. All look reasonable. But recovery fraction is suppressing output.
+**Investigation**: `frac_waso_landfill_gas_recovered = 0.997` in template. Bulgaria has extensive landfill gas recovery infrastructure. The calibration country has ~2% recovery (66 unmanaged dumps, 32% managed landfill, NIR p.271).
+**Fix**: Set `frac_waso_landfill_gas_recovered = 0.02`.
+**Result**: Waste CH4 rose from 0.5 to ~3.8 MtCO2e. Remaining gap addressed through MCF and waste-per-capita adjustments.
+**Lesson**: Template artifacts from industrialized base countries can suppress entire sectors by 90%+.
+
+### Example 3: Agriculture Energy Cascade (INEN → ENTC)
+**Diff report**: ENTC CO2 = 22.5 MtCO2e, target = 18.0 MtCO2e (overshooting by 4.5).
+**DAG trace**: ENTC ← NemoMod ← electricity demand ← INEN (industry) ← agriculture energy demand.
+**Investigation**: `consumpinit_inen_energy_total_pj_agriculture_and_livestock = 76.5` PJ in template. NIR Tableau 43 p.132 shows agriculture fuel consumption = 32.9 PJ. Template is 2.3x actual.
+**Fix**: Scale agriculture energy to 32.9 PJ. Set agriculture fuel fractions to diesel-dominant (58% diesel, 27% electricity — tractors, not factories). Recalibrate coal efficiency from 0.27 → 0.23 to compensate for reduced demand.
+**Result**: ENTC CO2 dropped by ~3 MtCO2e. But coal efficiency at 0.23 is very low — this signals the demand reduction exposed a structural issue (NemoMod over-dispatches coal when total demand drops).
+**Lesson**: Fixing upstream demand changes downstream dispatch. Always recalibrate ENTC efficiency after changing any INEN/SCOE demand parameter. Anti-pattern #3: compensating for wrong fundamentals.
