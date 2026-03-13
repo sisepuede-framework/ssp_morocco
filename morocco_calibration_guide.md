@@ -226,6 +226,8 @@ SISEPUEDE uses IPCC AR5 Global Warming Potentials for CO2-equivalence:
 
 > **Verified (IPCC Expert)**: All GWP values correct per IPCC AR5 Table 8.A.1. AR6 values exist (CH4=27.9, N2O=273) but are not yet adopted for UNFCCC reporting. SISEPUEDE uses AR5 for consistency with national inventories.
 
+> **A note on verification:** All equations, API references, source code citations, and IPCC factor values in this guide were validated through multi-agent expert review during development (codebase tracing, IPCC cross-referencing, and documentation verification). Where known issues or caveats remain, they are marked with "Advisory" or "Issue" notes inline.
+
 ---
 
 ## 2. Sector Model Deep Dives
@@ -376,6 +378,17 @@ Where:
 
 > **Advisory (IPCC Expert)**: IPCC 2019 Refinements introduce disaggregated N2O EF1 values by climate zone (wet vs dry), which are not yet incorporated in SISEPUEDE.
 
+#### Climate Zone Mapping Procedure
+
+SISEPUEDE parameters that depend on IPCC climate zone: waste decay rates (Table 3.3), landfill MCFs (Table 3.1), SOC reference values (Table 2.3), and agricultural climate fractions (`frac_agrc_*_cl1_*`, `frac_agrc_*_cl2_*`).
+
+**Procedure:**
+1. Look up the country's IPCC climate zone from Vol 4 Ch2 Figure 3.A.5 or Vol 5 Ch3 decision tree.
+2. Set `frac_agrc_*_cl1_temperate` vs `cl1_tropical` and `cl2_dry` vs `cl2_wet` to reflect the dominant zone. These must sum to 1.0 within each cl-group.
+3. Select MCFs from Table 3.1, decay rates from Table 3.3, and SOC reference from Table 2.3 for the matching zone.
+
+**Morocco:** Warm temperate dry. `cl1_temperate ≈ 0.95`, `cl2_dry ≈ 0.80`. SOC ref ~38 tC/ha. Waste decay: Boreal/Temperate Dry column. Liquid slurry MCF at 18°C = 35%.
+
 ---
 
 ### 2.2 Circular Economy — Solid Waste and Wastewater
@@ -476,38 +489,11 @@ Where:
 
 > **Advisory (IPCC Expert)**: The IPCC 2019 Refinements introduce a 32x increase in wastewater N2O factors at the **plant level** (from 0.005 to 0.16 kg N2O-N/kg N for centralized aerobic treatment). This 32x claim has been verified as correct for plant-level EFs but not yet implemented in SISEPUEDE.
 
-#### FOD Model Pseudocode
+#### FOD Model Implementation Summary
 
-```python
-def calculate_landfill_ch4(waste_deposited, years, waste_composition,
-                            climate='tropical_dry'):
-    """IPCC First-Order Decay model for landfill CH4."""
-    k_rates = get_decay_rates(climate)   # dict by waste type
-    DDOCm = {wtype: 0.0 for wtype in waste_composition}
-    emissions = []
+The implementation follows the equations above directly. For each year and waste type: (1) compute new decomposable DOC mass deposited ($DDOCm_{new} = W \times DOC \times DOCf \times MCF$), (2) compute decomposed mass from the accumulated pool ($DDOCm_{decomp} = DDOCm_{pool} \times (1 - e^{-k})$), (3) update the pool ($DDOCm_{pool} += DDOCm_{new} - DDOCm_{decomp}$), and (4) convert to CH4 ($CH_4 = DDOCm_{decomp} \times F \times 16/12$). After summing across waste types, subtract recovered gas $R$ and apply the oxidation factor $(1 - OX)$. See IPCC 2006 Vol 5 Ch3 Section 3.2 for the complete derivation.
 
-    for year in years:
-        annual_ch4 = 0.0
-        for waste_type, fraction in waste_composition.items():
-            W_type = waste_deposited[year] * fraction
-            DOC = get_doc_content(waste_type)
-            DOCf = 0.5;  MCF = get_mcf(landfill_type)
-
-            DDOCm_new = W_type * DOC * DOCf * MCF
-            k = k_rates[waste_type]
-            DDOCm_decomp = DDOCm[waste_type] * (1 - np.exp(-k))
-
-            DDOCm[waste_type] += DDOCm_new - DDOCm_decomp
-
-            F = 0.5  # CH4 fraction in landfill gas
-            annual_ch4 += DDOCm_decomp * F * (16/12)
-
-        R = recovered_ch4[year]
-        OX = 0.1
-        emissions.append((annual_ch4 - R) * (1 - OX))
-
-    return emissions
-```
+> **Note:** Because FOD accumulates a decomposable pool over time, SISEPUEDE's waste CH4 at tp=0 is always low (no historical waste stock). Waste CH4 grows rapidly in early time periods as the pool builds. This is structural, not a calibration error.
 
 ---
 
@@ -709,6 +695,24 @@ $$E_{fuel,f}^{buildings} = E_{demand}^{buildings} \cdot \theta_f$$
 Where $\theta_f$ is the fuel share and $\sum_f \theta_f = 1$.
 
 > **Issue (IPCC Expert)**: Building non-CO2 gases show >95% error — model produces near-zero CH4/N2O from buildings. The energy demand calculation appears correct, but the non-CO2 emission factors may be missing or incorrectly configured.
+
+#### IEA Consumption Fractions vs SISEPUEDE Demand Fractions
+
+IEA energy balances report **consumption fractions** ($\alpha^C$) — what end-users actually burn. SISEPUEDE input columns (`frac_scoe_heat_energy_*`, `frac_inen_energy_*`) require **demand fractions** ($\alpha^D$) — fuel shares *before* efficiency adjustment. The conversion (see `mathdoc_energy.html`, Equation 2):
+
+$$\alpha^D_f = \frac{\alpha^C_f / \eta_f}{\sum_{f'} \alpha^C_{f'} / \eta_{f'}}$$
+
+Where $\eta_f$ is the end-use efficiency for fuel $f$ (e.g., electricity $\approx$ 2.4, gas $\approx$ 0.9, biomass $\approx$ 0.6).
+
+**Worked example — Morocco residential heat:**
+
+| Fuel | IEA $\alpha^C$ | Efficiency $\eta$ | $\alpha^C / \eta$ | Demand $\alpha^D$ |
+|------|-----------------|--------------------|--------------------|-------------------|
+| Electricity | 0.30 | 2.40 | 0.125 | 0.22 |
+| Natural gas | 0.25 | 0.90 | 0.278 | 0.49 |
+| Biomass | 0.10 | 0.60 | 0.167 | 0.29 |
+
+Electricity's demand fraction (0.22) is much lower than its consumption fraction (0.30) because electricity is more efficient. Skipping this conversion overstates electricity demand and inflates ENTC CO2 through the NemoMod cascade.
 
 #### Industrial Energy Demand (inen)
 
@@ -919,6 +923,19 @@ The electricity and heat sector requires NemoMod, a Julia-based energy system op
 
 > **Warning (Issue C5)**: Without NemoMod enabled, electricity/heat emissions (~27.5 MtCO2e, ~30% of Morocco's total) will not appear in model outputs. This is the single largest calibration gap.
 
+### Data Collection for a New Country Deployment
+
+Before any calibration, download these datasets into `external_data/`:
+
+| Source | What to Download | Save To |
+|--------|------------------|---------|
+| **FAO** (faostat.fao.org) | Livestock heads by species, fertilizer nutrient use (t N), crop production | `external_data/fao/` |
+| **World Bank** (data.worldbank.org) | Population, GDP (constant USD), urbanization %, vehicles per 1000 people | `external_data/world_bank/` |
+| **IEA** (iea.org, subscription) | Energy balance (ktoe), TFC by sector, electricity generation by source, fuel trade | `external_data/iea_comprehensive/` |
+| **EDGAR** (edgar.jrc.ec.europa.eu) | v8.0 emissions by country, IPCC category, and gas (2000-2022) | `external_data/edgar/` |
+
+Also collect the country's **NIR** and **BUR** from the UNFCCC portal (`unfccc.int/non-annex-I-NCs`). These are authoritative for emission targets and methodology choices. Place in `NDC Docs/Additional docs/`.
+
 ---
 
 ## 5. Project Structure and Configuration
@@ -985,7 +1002,7 @@ The master configuration file controls all key parameters:
 
 ```yaml
 country_name: "morocco"
-ssp_input_file_name: "sisepuede_raw_inputs_latest_MAR_modified_2050.csv"
+ssp_input_file_name: "df_input_0.csv"   # Update after calibration; --input-file flag overrides this
 ssp_transformation_cw: "ssp_transformation_cw_morocco.xlsx"
 energy_model_flag: false          # Set to true to enable NemoMod/Julia
 set_lndu_reallocation_factor_to_zero: false
@@ -1077,13 +1094,35 @@ This step:
 
 Many SISEPUEDE variables represent fractions that must sum to 1.0 within groups. For example, the fractions of waste sent to landfill, composting, incineration, and open dumping must sum to 1.0 for each time period.
 
-```python
-# Check fraction groups
-fraction_groups = [col for col in df.columns if col.startswith('frac_')]
-# Group by subsector prefix and verify sums ≈ 1.0
+**Step 1 — Identify all members.** Grep the CSV header for the shared prefix:
+
+```bash
+head -1 df_input_0.csv | tr ',' '\n' | grep 'frac_inen_energy_cement_'
+# Returns: frac_inen_energy_cement_coal, _diesel, _electricity, _natural_gas, _oil, _solid_biomass, ...
 ```
 
-If fraction sums deviate from 1.0 by more than 0.01, SISEPUEDE may silently renormalize them or produce unexpected results. Use `GeneralUtils.normalize_energy_frac_vars()` to fix energy fractions.
+**Step 2 — Verify sums at every time period:**
+
+```python
+group_cols = [c for c in df.columns if c.startswith('frac_inen_energy_cement_')]
+sums = df[group_cols].sum(axis=1)
+assert sums.between(0.999, 1.001).all(), f"Sum range: {sums.min():.4f}–{sums.max():.4f}"
+```
+
+**Step 3 — Rebalance after changing one member.** Set the target column, then proportionally rescale all others:
+
+```python
+target_col = 'frac_inen_energy_cement_coal'
+new_value = 0.45  # from IEA data
+others = [c for c in group_cols if c != target_col]
+old_others_sum = df[others].sum(axis=1)
+df[target_col] = new_value
+df[others] = df[others].mul((1 - new_value) / old_others_sum, axis=0)
+```
+
+This preserves relative proportions among non-target fuels while enforcing sum = 1.0.
+
+If fraction sums deviate from 1.0 by more than 0.01, SISEPUEDE may silently renormalize them or produce unexpected results.
 
 ### Time Period Convention
 
@@ -1660,6 +1699,16 @@ Top remaining gaps:
 
 See `calibration_log.md` for full audit trail with source citations for every parameter change.
 
+### Handling Unmodeled Species
+
+SISEPUEDE models 9 livestock species (buffalo, cattle_dairy, cattle_nondairy, chickens, goats, horses, mules, pigs, sheep). Countries with significant populations of camels, asses, llamas, alpacas, or yaks must map these to the closest modeled species.
+
+**Method:** Convert to equivalent heads using the EF ratio: `equivalent_heads = unmodeled_pop × (EF_unmodeled / EF_proxy)`.
+
+**Morocco example:** Camels (57,500 × 46 kg CH4) + asses (950,000 × 10 kg) = 12,145 t CH4. At horse EF=18 kg/head: 674,722 equivalent horses added to `pop_lvst_initial_horses`.
+
+> **Cascade caveat:** Adding equivalent horses also inflates LSMM CH4 (manure management) and soil N2O (N excretion), because SISEPUEDE applies horse-specific manure MCFs and N rates to the full population. If the unmodeled species are predominantly on pasture (MCF ~1.5%) but the horse manure fractions allocate to higher-MCF systems, LSMM will overshoot. Monitor LSMM after applying this adjustment and rebalance `frac_lvst_mm_horses_*` if needed. Document the manure cascade error as structural (~0.1-0.5 MtCO2e).
+
 ### Production Elasticities
 
 Production elasticities control how IPPU production volumes scale with GDP over time:
@@ -1710,61 +1759,34 @@ The raw template CSV comes from a base country (Bulgaria for Morocco). **Systema
 
 > **Verified (Codebase Expert)**: 19.4% convergence is expected for a first-pass calibration. The reference notebook achieved similar convergence before multiple calibration iterations.
 
-### Sector-by-Sector Calibration Guide
+### Sector-by-Sector Calibration Status
 
-#### Livestock (lvst) — Well Calibrated
+#### Enteric Fermentation (3.A.1:CH4) — Good (-14%)
+Target 9.10 MtCO2e, model 7.84 MtCO2e. Gap largely from unmodeled species (camels + asses ≈ 0.34 Mt structural). Horse-equivalent adjustment narrows gap. Cattle, sheep, goat populations verified against FAO 2015.
 
-Current livestock CH4 is at 3.9% error — excellent. Key variables:
+#### Manure Management (3.A.2:CH4) — Structural Overshoot (+93%)
+Target 0.56 MtCO2e, model 1.09 MtCO2e. Liquid slurry MCF at 18°C = 35% (IPCC Table 10.17) amplifies even small fractions. Chicken MM corrected from Bulgarian (25% liquid) to IPCC Africa defaults (76% poultry_manure). Documented as structural.
 
-```
-pop_lvst_initial_cattle_dairy
-pop_lvst_initial_cattle_nondairy
-pop_lvst_initial_sheep
-pop_lvst_initial_goats
-pop_lvst_initial_chickens
-```
+#### Soil N2O (3.C.4:N2O) — Acceptable (-11%)
+Target 6.40 MtCO2e, model 5.69 MtCO2e. EF1 at IPCC maximum (0.030). Remaining gap in N throughput — crop residue N and manure-on-pasture below NIR Tableau 105 values.
 
-**Data sources**: FAOSTAT (primary), Our World in Data (secondary), Morocco Ministry of Agriculture (tertiary)
+#### IPPU Cement (2.A.1:CO2) — Well Calibrated (-3%)
+Production 12.49 Mt (NIR T61), clinker ratio 0.72, EF 0.52 tCO2/t clinker (SNBC p.157). All sourced.
 
-> **Historical note**: Early iterations had sheep population off by 1523x due to unit confusion (head vs. thousands). Always verify units against source data.
+#### Electricity/Heat (1.A.1.a:CO2) — Well Calibrated (+0.4%)
+Target 32.22 MtCO2e, model 32.33 MtCO2e. Coal efficiency 0.22, MSP 0.65. NemoMod ALL OPTIMAL.
 
-#### AG Crops N2O — Critical (97% Error)
+#### Transport (1.A.3:CO2) — Well Calibrated (+1%)
+Target 17.61 MtCO2e, model 17.76 MtCO2e. Diesel/gasoline split and demand aligned with IEA.
 
-The agricultural crops N2O emissions are critically underestimated (0.14 vs 4.62 MtCO2e). The emission factor (EF1 = 0.01) is correct — the issue is in activity data:
+#### SCOE Residential (1.A.4.b:CO2) — Good (-5%)
+Target 7.70 MtCO2e, model 7.32 MtCO2e. Per-HH intensity 19.0 GJ/HH (NIR T43 back-calculation).
 
-1. Synthetic fertilizer application rates (`qty_agrc_fertilizer_n_synthetic`)
-2. Crop residue management fractions
-3. Total cultivated area
+#### Waste (4.A:CH4) — Good (-12%)
+Target 3.72 MtCO2e, model 3.29 MtCO2e. Landfill gas recovery 0.02 (template was 0.997). FOD memory effects cause structural undershoot at tp=7.
 
-**Likely cause**: Fertilizer application quantities may be orders of magnitude too low in the input data.
-
-> **Verified (IPCC Expert)**: EF1 = 0.01 is correct per IPCC 2006 Table 11.1. The 97% error is a data input issue, not a model equation issue.
-
-#### Forest Sequestration — Critical (12.8x Overestimate)
-
-Model shows -12.05 MtCO2e vs EDGAR -0.875 MtCO2e. Investigate:
-
-1. Forest area estimates (may be overestimated)
-2. Carbon sequestration rates per hectare (default tropical rates may be too high for Morocco's degraded forests)
-3. Whether model includes planted forests vs. natural regrowth
-
-#### IPPU/Cement — Moderate (30.8% Error)
-
-Cement production is set at 25 Mt, which represents **capacity** not actual production (~13-16 Mt). The clinker emission factor (0.507 t CO2/t clinker) is close to but slightly below the IPCC default (0.52).
-
-#### LSMM CH4 — Critical (87.4% Error, Worsening)
-
-Livestock manure management CH4 shows 87.4% error, and this worsened from 73% in earlier iterations. Investigate:
-
-1. Manure management system distribution (anaerobic lagoon vs. solid storage vs. daily spread)
-2. Whether the LSMM split from EDGAR's single livestock CH4 figure is correct
-3. CH4 MCF values for each management system
-
-> **Issue (IPCC Expert)**: The LSMM calibration worsening (73% → 87% across iterations) suggests that adjustments to livestock populations for `lvst` enteric calibration may have had unintended side effects on `lsmm`.
-
-#### Electricity/Heat — Uncalibrated
-
-This sector (27.5 MtCO2e, ~30% of total) requires NemoMod. Set `energy_model_flag: true` and ensure Julia is properly installed.
+#### Agriculture Energy (1.A.4.c:CO2) — Moderate (-25%)
+Target 2.80 MtCO2e, model 2.10 MtCO2e. NIR T43: 38.6 PJ at 2022, model base 34.4 PJ. Fuel fractions corrected to diesel+biomass only (NIR T44).
 
 ### Multi-Source Verification
 
@@ -1777,6 +1799,15 @@ Before applying any calibration adjustment, verify target values with at least 2
 | Energy | IEA | UN Energy Statistics |
 | Cement | USGS Minerals Yearbook | Global Cement Report |
 | Land Use | FAO FRA | Morocco HCP |
+
+#### Sparse Data Fallback (Countries Without Rich NIR)
+
+For countries lacking a detailed NIR or BUR:
+1. **EDGAR as primary target** — not ideal (known biases in waste CH4, soil N2O, HFCs) but often the only multi-sector source.
+2. **IEA for energy sector detail** — electricity generation mix and TFC by sector are generally reliable.
+3. **FAO for agriculture** — livestock populations, fertilizer, and crop areas have near-universal coverage.
+4. **BUR1 as cross-check** — even a first BUR provides one year of official data. Prefer BUR over EDGAR where they disagree.
+5. **Widen calibration tolerances** — accept 25% per-category (instead of 15%) and 20 MtCO2e total when relying on EDGAR-only targets.
 
 ### Tracking Calibration Changes
 
@@ -2189,6 +2220,8 @@ SpecifiedAnnualDemand = (demands + exports) / (1 - transmission_loss)
 > **Verified (Agent 1, Session 5):** The actual SAD for electricity at tp=7 is ~89.6 PJ, which is 42% BELOW IEA's ~155 PJ. The demand is NOT inflated.
 
 **Step 3: NemoMod decides how to meet demand**
+
+> **HISTORICAL NOTE:** The nuclear overproduction example below shows the state BEFORE nuclear was capped at 0 GW. The current `df_input_0.csv` has `nemomod_entc_total_annual_max_capacity_pp_nuclear_gw = 0` and `nemomod_entc_total_annual_max_capacity_investment_pp_nuclear_gw = 0`. The example is preserved because it illustrates *why* capacity capping is essential.
 
 NemoMod receives ~89.6 PJ electricity demand. But because nuclear investment is unconstrained (-999 = no cap) and nuclear fuel costs near-zero, NemoMod builds **289 GW of nuclear** and produces **13,048 PJ** total — 122x the actual demand.
 
