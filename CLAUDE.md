@@ -426,7 +426,7 @@ Tables 2.2-2.5 in V2_Ch2 give DIFFERENT CH4 EFs for the SAME fuel by combustion 
 SISEPUEDE uses ONE shared EF column (`ef_enfu_stationary_combustion_tonne_ch4_per_tj_fuel_*`) for CCSQ, INEN, and SCOE simultaneously. No per-subsector override exists.
 
 ### Shared Fuel EFs Across ALL Energy Sectors
-ALL combustion EFs (`ef_enfu_*`) are shared across CCSQ, INEN, SCOE, and ENTC. Changing a fuel's CO2, CH4, or N2O EF affects every sector that burns that fuel. To adjust ENTC emissions independently, use the EAR scalar or efficiency factor — not the base fuel EF.
+ALL combustion EFs (`ef_enfu_*`) are shared across CCSQ, INEN, SCOE, and ENTC. Changing a fuel's CO2, CH4, or N2O EF affects every sector that burns that fuel. There is no per-subsector override. Choose EF values that represent a weighted average appropriate for the country's fuel use composition.
 
 ### Template Artifacts
 - **Biomass naming**: `solid_biomass` appears in INEN/SCOE demand fraction columns but maps to `fuel_biomass`. Emission factors use only `ef_enfu_*_fuel_biomass`. Do not confuse demand fractions with EF columns.
