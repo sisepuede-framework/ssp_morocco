@@ -1879,7 +1879,7 @@ The model run must produce these files for the postprocessing pipeline:
 
 ### Baseline vs. LEP Comparison
 
-Once calibrated, the primary analysis compares Strategy 0 (Baseline/BAU) against Strategy 6003 (Low Emissions Pathway):
+Once calibrated, the primary analysis compares Strategy 0 (Baseline/BAU) against Strategy 6005 (SNBC Net Zero):
 
 ```python
 df_baseline = df_out[df_out[ssp.key_primary] == 0]
@@ -1895,9 +1895,39 @@ reduction_2030 = (baseline_total[15] - lep_total[15]) / baseline_total[15] * 100
 print(f"Emissions reduction at 2030: {reduction_2030:.1f}%")
 ```
 
+### BAU Trajectory Validation
+
+Before running policy scenarios, validate that Strategy 0 (baseline) produces a plausible forward trajectory. Compare against the country's official BAU/Reference scenario (e.g., Morocco's SNBC Reference, SNBC Figure 15 p.51).
+
+| Year | SNBC Reference | Model Baseline | Gap | Assessment |
+|------|---------------|---------------|-----|-----------|
+| 2022 | ~100 Mt | 96.3 Mt | -4% | Good (within NIR calibration tolerance) |
+| 2030 | ~125 Mt | 103.5 Mt | -17% | Under — demand elasticities too conservative |
+| 2050 | ~200 Mt | 136.0 Mt | -32% | Significant divergence |
+
+**Root causes of trajectory gaps** (Morocco example):
+- Transport elasticity 0.80 vs SNBC-implied 1.47 (motorization wave in middle-income country)
+- Commercial energy elasticity 0.00 vs SNBC 1.5-2.0 (urbanization-driven services growth)
+- Cement elasticity -2.0 vs NIR historical -0.42 (cyclical decline, not structural)
+- Coal does not retire in baseline (SNBC includes ONEE capital plan as BAU)
+
+> **Design principle:** Forward-looking BAU changes (coal retirement, renewable capacity ramps, demand elasticity adjustments) should be implemented as SISEPUEDE transformations, not as direct CSV modifications to `df_input_0.csv`. This preserves the historical calibration at tp=0-7 and enables clean comparison between baseline and policy scenarios.
+
+**SNBC-derived elasticities** (for countries with official BAU projections):
+
+| Sector | SNBC Method | Implied Elasticity | Source |
+|--------|-----------|-------------------|--------|
+| Transport | Vehicle stock turnover (108 techs) | 1.47 | SNBC pp.59-62 |
+| Industry energy | Subsector value-added analysis | 1.12 | SNBC pp.155-156 |
+| Commercial | GDP-linked tertiary output | 1.5-2.0 | SNBC p.154 |
+| Residential | Per HH + income | ~1.0 | SNBC p.55 |
+| Cement | Per capita (population-driven) | 0.3-0.5 | SNBC p.157 |
+
+**Coal retirement in BAU** (SNBC p.53-54): Morocco's coal plants are decommissioned by late 2040s based on existing ONEE contracts and cost-competitiveness of renewables — this is BAU behavior, not a climate policy. Model via declining `nemomod_entc_residual_capacity_pp_coal_gw` + zero `nemomod_entc_total_annual_max_capacity_investment_pp_coal_gw`.
+
 ### Interpreting LEP Transformations
 
-Morocco's LEP (Strategy 6003) includes transformations across all sectors:
+Morocco's SNBC Net Zero (Strategy 6005) includes 63 transformations across all sectors:
 
 | Sector | Key Transformations | Expected Impact |
 |--------|-------------------|-----------------|
