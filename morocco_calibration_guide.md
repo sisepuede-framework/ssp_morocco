@@ -761,7 +761,7 @@ Where:
 
 > **Verified (IPCC Expert)**: All stationary combustion CO2 emission factors confirmed correct per IPCC 2006 Table 2.2 — natural gas=56,100, diesel=74,100, coal=94,600, gasoline=69,300 kg CO2/TJ.
 
-> **CRITICAL: Shared Fuel EFs.** All combustion emission factors (`ef_enfu_*`) are shared across CCSQ, INEN, SCOE, and ENTC. Changing a fuel's CO2, CH4, or N2O EF affects **every sector** that burns that fuel. There is no per-subsector override — any EF change is a global change across all energy subsectors. Choose EF values that represent a weighted average appropriate for the country's fuel use composition. (Source: verified in `energy_consumption.py` lines 2247, 2845, 3303.)
+> **CRITICAL: Shared Fuel EFs.** All combustion emission factors (`ef_enfu_*`) are shared across CCSQ, INEN, SCOE, and ENTC. Changing a fuel's CO2, CH4, or N2O EF affects **every sector** that burns that fuel. There is no per-subsector override. Always source EF values from official IPCC tables (V2 Ch2 Tables 2.2-2.5) or the country's NIR methodology section. If the shared EF creates a mismatch between sectors (e.g., biomass CH4: 30 kg/TJ for power vs 300 kg/TJ for residential), document this as a structural model limitation. (Source: verified in `energy_consumption.py` lines 2247, 2845, 3303.)
 
 > **Biomass naming trap.** The suffix `solid_biomass` appears in INEN/SCOE demand fraction columns (e.g., `frac_inen_energy_cement_solid_biomass`) but maps to `fuel_biomass` internally. Emission factors use **only** `ef_enfu_*_fuel_biomass`. There is no `ef_enfu_*_fuel_solid_biomass` column. Do not confuse demand fractions with EF columns.
 
