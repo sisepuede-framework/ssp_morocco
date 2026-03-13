@@ -855,13 +855,16 @@ Morocco has committed under its Nationally Determined Contribution (NDC) to:
 
 Key decarbonization levers include renewable energy expansion, energy efficiency in buildings and industry, improved agricultural practices, and better waste management.
 
-### Calibration Reference: EDGAR v8.0
+### Calibration Reference: National Inventory Report (NIR)
 
-The primary calibration target is the **Emissions Database for Global Atmospheric Research (EDGAR) v8.0**, which provides:
-- Sector-level emissions by gas for all countries
-- Annual data through 2022
-- Consistent IPCC methodology across sectors
-- Independent of national reporting (satellite and activity-data derived)
+The primary calibration target is the country's **National Inventory Report (NIR)**, which provides:
+- Official IPCC CRF category emissions by gas, verified through national QA/QC processes
+- Multi-year time series (Morocco: 2010-2022 in NIR 2024)
+- Sector-specific methodology documentation (emission factors, activity data sources)
+
+**EDGAR v8.0** is used as an independent cross-check only. EDGAR has known errors: waste CH4 (overstates vs national FOD), soil N2O (overstates vs national inventory), HFC (top-down vs BUR bottom-up), INEN CO2 (may exclude agriculture energy). When NIR and EDGAR disagree, NIR is authoritative.
+
+The diagnostic tool `compare_to_inventory.py` compares model outputs against an IPCC crosswalk file (`emission_targets_{country}_{year}.csv`) built from NIR values. See Section 10 for details.
 
 The calibration reference year is **2022** (corresponding to `time_period = 7` in SISEPUEDE, where time_period 0 = 2015).
 
@@ -1550,55 +1553,49 @@ Where:
 
 The emission targets file maps EDGAR categories to SISEPUEDE output columns:
 
+### Building the Targets File
+
+The targets file maps IPCC CRF categories to SISEPUEDE output variables. Build it with `build_emission_targets_mar.py` (or equivalent for your country):
+
 ```csv
-# emission_targets_morocco_2022.csv
-Subsector,id,Vars,MAR
-lvst,AG - Livestock - CH4,emission_co2e_ch4_lvst_enteric:emission_co2e_ch4_lvst_manure,4.58
-trns,EN - Transportation - CO2,emission_co2e_co2_trns_road:emission_co2e_co2_trns_aviation,19.37
+# emission_targets_mar_2022.csv
+subsector_ssp,sector,category,gas,ID,vars,target_source,MAR
+lvst,3 - AFOLU,3.A.1 - Enteric Fermentation,CH4,3.A.1:CH4,emission_co2e_ch4_lvst_entferm_cattle_dairy:...,NIR Tableau 83 p.189,9.10028
 ```
 
-The `Vars` column contains colon-separated SISEPUEDE variable names to sum for comparison.
+Columns: `subsector_ssp` (SISEPUEDE subsector), `sector` (IPCC sector), `category` (CRF category with description), `gas`, `ID` (compact identifier), `vars` (colon-separated SISEPUEDE output columns to sum), `target_source` (NIR table citation), and a country code column (e.g., `MAR`) with the inventory value in MtCO2e.
 
-### Calibration Error Algorithm
+Set `INCLUDE_LULUCF = False` until all other sectors are calibrated. LULUCF has structural gaps (SOC modeling, fire) that should be isolated.
 
-```python
-def calculate_calibration_errors(ssp_output, inventory_targets, year=2022):
-    """
-    Compare SSP outputs to inventory targets at reference year.
+### Diagnostic Tool: compare_to_inventory.py
 
-    Parameters
-    ----------
-    ssp_output : DataFrame with SISEPUEDE outputs
-    inventory_targets : DataFrame with columns [Subsector, id, Vars, MAR]
-    year : Reference year (default 2022 = time_period 7)
-    """
-    time_period = year - 2015
+Replaces the hand-rolled comparison code. Country-agnostic — works with any crosswalk file.
 
-    ssp_row = ssp_output[
-        (ssp_output['time_period'] == time_period) &
-        (ssp_output['primary_id'] == 0)
-    ]
-
-    results = []
-    for _, target in inventory_targets.iterrows():
-        vars_list = target['Vars'].split(':')
-        valid_vars = [v for v in vars_list if v in ssp_row.columns]
-        ssp_sum = ssp_row[valid_vars].sum(axis=1).values[0]
-        inv_val = target['MAR']
-
-        epsilon = 1e-8
-        error = abs(ssp_sum - inv_val) / (abs(inv_val) + epsilon)
-
-        results.append({
-            'subsector': target['Subsector'],
-            'category': target['id'],
-            'inventory_emission': inv_val,
-            'ssp_emission': ssp_sum,
-            'error': error,
-        })
-
-    return pd.DataFrame(results)
+```bash
+python compare_to_inventory.py \
+  --targets emission_targets_mar_2022.csv \
+  --output WIDE_INPUTS_OUTPUTS.csv \
+  --tp 7 --top 10
 ```
+
+**Outputs** (saved to `{run_folder}/diagnostics/`):
+| File | Contents |
+|------|----------|
+| `diff_report.csv` | Full comparison: abs_impact_rank, ID, category (with description), inventory, model, diff, error_pct, direction, top_component |
+| `flagged.csv` | Component breakdown for categories exceeding threshold |
+| `diagnostics.csv` | Structural warnings (10 checks) |
+
+**Diagnostics include:**
+- `ZERO_OUTPUT` — target > 0 but model = 0 (missing input values)
+- `MAGNITUDE_10X` — model/inventory ratio > 10x (unit error)
+- `SIGN_MISMATCH` — model and inventory disagree on source vs sink
+- `GAS_RATIO` — CO2 matches but CH4/N2O way off (check non-CO2 EFs)
+- `SINGLE_DOMINANCE` — one component is 95%+ of total (others may be missing)
+- `DECLINING_WITH_GDP_GROWTH` — sector emissions decline while GDP grows (check production elasticities)
+- `GROWTH_LAG` — sector grows much slower than GDP (implicit elasticity < 0.3)
+- `POPULATION_MISMATCH` — waste/residential grows > 3x faster than population
+
+The growth diagnostics flag trajectory-level problems invisible at tp=7 alone.
 
 ### The Golden Rule: Scale, Don't Replace
 
@@ -1643,21 +1640,65 @@ def apply_scaling(df, column, target_2022, ref_period=7):
 
 ### Current Morocco Calibration Status
 
-Based on EDGAR v8.0 comparison at reference year 2022:
+Based on NIR 2024 comparison at reference year 2022 (34 IPCC categories, no LULUCF):
 
-| Sector | Gas | EDGAR (MtCO2e) | SSP Output | Error | Status |
-|--------|-----|----------------|------------|-------|--------|
-| Livestock (lvst) | CH4 | 4.58 | 4.40 | 3.9% | Excellent |
-| LULUCF Deforestation | CO2 | 4.55 | ~4.55 | ~0% | Excellent |
-| LULUCF Organic Soil | N2O | 17.2 | ~15.9 | 7.7% | Excellent |
-| LULUCF Organic Soil | CO2 | 3.8 | ~3.0 | 20.2% | Acceptable |
-| Wastewater | CH4 | 1.93 | ~1.61 | 16.4% | Acceptable |
-| IPPU | CO2 | 5.35 | 7.0 | 30.8% | Moderate |
-| Transportation | CO2 | — | — | 50.1% | High |
-| Solid Waste | CH4 | — | — | 60.5% | High |
-| LSMM | CH4 | — | — | 87.4% | Critical |
-| AG Crops | N2O | 4.62 | 0.14 | 97% | Critical |
-| Building | CH4/N2O | — | ~0 | >95% | Critical |
+- **Total error: 7.29 MtCO2e** across 34 categories
+- **Within 15%: 16/34 (47%)**
+- **Within 25%: 22/34 (65%)**
+- **NemoMod: ALL OPTIMAL**
+
+Top remaining gaps:
+| Category | Inventory | Model | Error | Assessment |
+|----------|-----------|-------|-------|-----------|
+| 3.A.1:CH4 Enteric | 9.10 | 7.84 | -14% | Unmodeled species (camels/asses ≈ 0.34 Mt structural) |
+| 1.A.4.c:CO2 Agriculture | 2.80 | 2.10 | -25% | NIR T43 shows 38.6 PJ at 2022, model at 34.4 PJ |
+| 3.A.2:CH4 Manure | 0.56 | 1.09 | +93% | Liquid slurry MCF at 18°C = 35% amplifies small fractions |
+| 3.C.4:N2O Soil | 6.40 | 5.69 | -11% | EF1 at IPCC max 0.030, N throughput gap |
+
+See `calibration_log.md` for full audit trail with source citations for every parameter change.
+
+### Production Elasticities
+
+Production elasticities control how IPPU production volumes scale with GDP over time:
+
+$$\text{production}(t) = \text{prodinit} \times \prod_{i=0}^{t-1} (1 + \text{GDP\_rate}_i \times \text{elasticity})$$
+
+**Always derive from NIR historical data** (regression of production vs GDP time series), never guess. Example: Morocco cement production declined from 14.25 Mt (2015) to 12.49 Mt (2022) while GDP grew 14% — giving elasticity ≈ -0.42. Using the template default of -2.0 would cause production collapse.
+
+IPPU production elasticities must be **constant** across all time periods (time-varying values cause production instability). For step-changes (e.g., new desalination plants), use `demscalar_ippu_{industry}` instead.
+
+### Reverse Diagnostic Mapping
+
+When a category is flagged in `diff_report.csv`, trace back to input parameters:
+
+| Wrong output | Check these inputs |
+|---|---|
+| `entc_generation_pp_coal` | `efficfactor_entc_*_pp_coal`, MSP, residual capacity |
+| `inen_*_{industry}` | `prodinit_ippu_{industry}`, `consumpinit_inen_*_{industry}`, `frac_inen_energy_{industry}_*` |
+| `scoe_*` | `consumpinit_scoe_gj_per_hh_*`, `frac_scoe_heat_energy_*` |
+| `waso_*` | `qty_waso_initial_*_tonne_per_capita`, `mcf_waso_*`, `frac_waso_*` |
+| `lvst_entferm_*` | `pop_lvst_*`, `ef_lvst_entferm_*` |
+| `lsmm_*` | `frac_lvst_mm_*`, `mcf_lsmm_*` |
+| `soil_*` | `qtyinit_soil_synthetic_fertilizer_kt`, `ef_soil_*` |
+| `trns_*` | `deminit_trde_*`, `fuelefficiency_trns_*`, `frac_trns_*` |
+
+For multiplicative formulas, check each term against external data. The term furthest from the reference is the one to fix.
+
+### Template Artifact Checklist
+
+The raw template CSV comes from a base country (Bulgaria for Morocco). **Systematically check and replace:**
+
+- [ ] Population and GDP (Gate 1-2)
+- [ ] All livestock populations (Gate 4)
+- [ ] Fertilizer quantities (Gate 5)
+- [ ] Fuel import fractions (Gate 6)
+- [ ] Climate classification (Gate 7)
+- [ ] **Fuel exports** — template may have exports the country doesn't have. Zero them. (Gate 7b)
+- [ ] **Waste per capita and composition** — template waste data is almost always wrong (Gate 7c)
+- [ ] **IPPU production volumes** — cement, metals, chemicals from the base country (Gate 7d)
+- [ ] **Landfill gas recovery** — template may have ~1.0 (industrialized country) when actual is near 0
+- [ ] **Metal CCS capture** — template may have 0.90 (base country CCS). Zero for countries without CCS
+- [ ] **Manure management fractions** — template reflects base country livestock systems, not yours
 | Forest Sequestration | CO2 | -0.875 | -12.05 | 12.8x | Critical |
 | Electricity/Heat | CO2 | 27.52 | **MISSING** | N/A | Uncalibrated |
 | Fugitive Emissions | All | 0.19 | **MISSING** | N/A | Uncalibrated |
@@ -2300,6 +2341,12 @@ $$\text{TotalAnnualActivity}_{r,t,y} \leq \text{TotalTechnologyAnnualActivityUpp
 | 10 | `nemomod_entc_scalar_availability_factor_pp_{tech}` | AvailabilityFactor | Capacity factor scalar | All = 1.0 | Should reflect actual CFs (coal ~0.80, solar ~0.20) |
 
 > **Verified (Agent 2, Session 5):** Cross-country comparison confirmed MSP sum ≈ 1.0 for Bulgaria (0.96), Mexico (1.00), Peru (0.97), Louisiana (1.00), Uganda (1.00), Morocco original (1.00). Only Morocco demo has MSP sum = 0.02.
+
+> **EAR bounds.** Both the EAR scalar and efficiency factor are bounded [0,1] in source code (`energy_production.py` lines 5719, 5731). Values outside this range are silently clipped. Setting efficiency > 1.0 or scalar > 1.0 has no effect.
+
+> **All capacity parameters are time-varying.** `ResidualCapacity`, `TotalAnnualMaxCapacity`, and `TotalAnnualMaxCapacityInvestment` accept different values at each time period (one per row in the CSV). Use declining trajectories for plant retirement and increasing trajectories for capacity expansion.
+
+> **MSP must decline ahead of capacity retirement.** When retiring a technology via declining `residual_capacity`, reduce its MSP (`frac_min_share_production`) to zero BEFORE capacity reaches zero. If MSP demands more production than available capacity can deliver, NemoMod goes INFEASIBLE. Safe practice: MSP should reach zero at least 5 time periods before capacity reaches zero.
 
 ---
 
