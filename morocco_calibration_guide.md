@@ -1608,36 +1608,102 @@ Set `INCLUDE_LULUCF = False` until all other sectors are calibrated. LULUCF has 
 
 ### Diagnostic Tool: compare_to_inventory.py
 
-Replaces the hand-rolled comparison code. Country-agnostic — works with any crosswalk file.
+Country-agnostic tool that compares SISEPUEDE model output to a national GHG inventory via an IPCC crosswalk file. Works from CLI or as an importable Python API.
+
+#### CLI Usage
 
 ```bash
-python compare_to_inventory.py \
-  --targets emission_targets_mar_2022.csv \
-  --output WIDE_INPUTS_OUTPUTS.csv \
-  --tp 7 --top 10
+# Basic comparison at tp=7 (2022)
+python compare_to_inventory.py --targets emission_targets_mar_2022.csv --output WIDE_INPUTS_OUTPUTS.csv --tp 7
+
+# Show all categories (not just top 10)
+python compare_to_inventory.py ... --top 0
+
+# With learning annotations (WHAT/TRAJECTORY/DAG/FIX)
+python compare_to_inventory.py ... --explain
+
+# Custom error threshold (25% instead of 15%)
+python compare_to_inventory.py ... --threshold 0.25
+
+# Check a different time period (e.g., 2030)
+python compare_to_inventory.py ... --tp 15
+
+# Save outputs to a custom directory
+python compare_to_inventory.py ... --out-dir my_diagnostics/
 ```
 
-**Outputs** (saved to `{run_folder}/diagnostics/`):
-| File | Contents |
-|------|----------|
-| `diff_report.csv` | Full comparison: abs_impact_rank, ID, category (with description), inventory, model, diff, error_pct, direction, top_component |
-| `flagged.csv` | Component breakdown for categories exceeding threshold |
-| `diagnostics.csv` | Structural warnings (10 checks) |
+#### Python API (for notebooks)
 
-**Diagnostics (11 checks):**
-- `ZERO_OUTPUT` — target > 0 but model = 0 (missing input values)
-- `MAGNITUDE_10X` — model/inventory ratio > 10x (unit error)
-- `SIGN_MISMATCH` — model and inventory disagree on source vs sink
-- `GAS_RATIO` — CO2 matches but CH4/N2O way off (check non-CO2 EFs)
-- `SINGLE_DOMINANCE` — one component is 95%+ of total (others may be missing)
-- `MISSING_VARS` — expected output variables not found in model output
-- `TRAJECTORY` — emission changed > 100% or dropped > 50% from tp=0 to tp=7
-- `DECLINING_WITH_GDP_GROWTH` — sector emissions decline while GDP grows (check production elasticities)
-- `GROWTH_LAG` — sector grows much slower than GDP (implicit elasticity < 0.3)
-- `GROWTH_EXCEEDS_GDP` — sector grows much faster than GDP (elasticity > 2.5)
-- `POPULATION_MISMATCH` — waste/residential grows > 3x faster than population
+```python
+from compare_to_inventory import compare, DiagnosticConfig, DAG_AFFECTS
 
-The growth diagnostics flag trajectory-level problems invisible at tp=7 alone.
+config = DiagnosticConfig(tp=7, threshold=0.15)
+diff, flagged, diag = compare("targets.csv", "WIDE.csv", config, verbose=False)
+
+# diff: full comparison DataFrame (all categories)
+# flagged: only categories exceeding threshold
+# diag: structural warnings
+```
+
+#### Output Files
+
+Saved to `{run_folder}/diagnostics/`:
+
+| File | Key Columns |
+|------|-------------|
+| `diff_report.csv` | `abs_impact_rank`, `ID`, `category`, `inventory`, `model`, `diff`, `error_pct`, `direction`, `top_component`, `model_growth_pct` |
+| `flagged.csv` | `parent_ID`, `component`, `value`, `share_pct` (breakdown of flagged categories) |
+| `diagnostics.csv` | `ID`, `issue`, `severity`, `detail` (structural warnings) |
+
+#### Diagnostic Checks (11 types)
+
+| Check | Severity | Trigger | Action |
+|-------|----------|---------|--------|
+| `ZERO_OUTPUT` | HIGH | Model = 0, inventory > 0 | Input values missing or zeroed |
+| `MAGNITUDE_10X` | HIGH | Model/inventory > 10x or < 0.1x | Unit error or missing parameter |
+| `SIGN_MISMATCH` | HIGH | Model and inventory have opposite signs | Source vs sink confusion |
+| `GAS_RATIO` | MEDIUM | CO2 matches but CH4/N2O > 50% off | Non-CO2 emission factors wrong |
+| `SINGLE_DOMINANCE` | MEDIUM | One component > 95% of total | Other variables may be missing |
+| `MISSING_VARS` | LOW | Expected output vars not in model | Incomplete run or wrong column names |
+| `TRAJECTORY` | MEDIUM | > 100% growth or > 50% decline from tp=0 | Unrealistic elasticity or artifact |
+| `DECLINING_WITH_GDP_GROWTH` | MEDIUM | Sector declines while GDP grows | Production elasticity too negative |
+| `GROWTH_LAG` | MEDIUM | Sector grows < 30% of GDP rate | May underestimate future emissions |
+| `GROWTH_EXCEEDS_GDP` | MEDIUM | Sector grows > 2.5x GDP rate | Demand parameters too high |
+| `POPULATION_MISMATCH` | MEDIUM | Waste grows > 3x population | Waste-per-capita trajectory unrealistic |
+
+#### Building a Targets File for a New Country
+
+Create `emission_targets_{country}_{year}.csv` with columns:
+
+| Column | Description |
+|--------|-------------|
+| `subsector_ssp` | SISEPUEDE subsector (e.g., `lvst`, `entc`, `waso`) |
+| `sector` | IPCC sector (e.g., `1 - Energy`, `3 - AFOLU`) |
+| `category` | CRF category with description (e.g., `3.A.1 - Enteric Fermentation`) |
+| `gas` | Gas name (`CO2`, `CH4`, `N2O`, `HFCS`) |
+| `ID` | Compact identifier (e.g., `3.A.1:CH4`) |
+| `vars` | Colon-separated SISEPUEDE output column names to sum |
+| `target_source` | Citation (e.g., `NIR Tableau 83 p.189`) |
+| `{COUNTRY_CODE}` | Inventory value in MtCO2e (column name = country ISO code) |
+
+The `vars` column maps each IPCC category to the SUM of specific model output columns. Set `INCLUDE_LULUCF = True/False` in the build script to include or exclude LULUCF categories.
+
+#### DAG Dependency Map
+
+The `DAG_AFFECTS` dict (importable) shows which downstream sectors change when you modify a given subsector:
+
+```
+lvst  → lsmm, soil, lndu, agrc    (livestock → manure, soil N2O, land use, crops)
+agrc  → soil, inen, entc           (crops → soil, industry energy, electricity)
+ippu  → inen, entc                 (production volumes → industry energy demand)
+inen  → entc, fgtv                 (industry energy → electricity dispatch, fugitive)
+scoe  → entc, fgtv                 (buildings → electricity, fugitive)
+trns  → entc, fgtv                 (transport → electricity, fugitive)
+entc  → fgtv                       (electricity → fugitive emissions)
+soil, frst, trww, fgtv, ccsq → []  (terminal nodes)
+```
+
+Use this to predict cascading effects before applying any fix.
 
 ### The Golden Rule: Scale, Don't Replace
 
