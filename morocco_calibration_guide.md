@@ -1585,14 +1585,17 @@ python compare_to_inventory.py \
 | `flagged.csv` | Component breakdown for categories exceeding threshold |
 | `diagnostics.csv` | Structural warnings (10 checks) |
 
-**Diagnostics include:**
+**Diagnostics (11 checks):**
 - `ZERO_OUTPUT` — target > 0 but model = 0 (missing input values)
 - `MAGNITUDE_10X` — model/inventory ratio > 10x (unit error)
 - `SIGN_MISMATCH` — model and inventory disagree on source vs sink
 - `GAS_RATIO` — CO2 matches but CH4/N2O way off (check non-CO2 EFs)
 - `SINGLE_DOMINANCE` — one component is 95%+ of total (others may be missing)
+- `MISSING_VARS` — expected output variables not found in model output
+- `TRAJECTORY` — emission changed > 100% or dropped > 50% from tp=0 to tp=7
 - `DECLINING_WITH_GDP_GROWTH` — sector emissions decline while GDP grows (check production elasticities)
 - `GROWTH_LAG` — sector grows much slower than GDP (implicit elasticity < 0.3)
+- `GROWTH_EXCEEDS_GDP` — sector grows much faster than GDP (elasticity > 2.5)
 - `POPULATION_MISMATCH` — waste/residential grows > 3x faster than population
 
 The growth diagnostics flag trajectory-level problems invisible at tp=7 alone.
@@ -1642,7 +1645,7 @@ def apply_scaling(df, column, target_2022, ref_period=7):
 
 Based on NIR 2024 comparison at reference year 2022 (34 IPCC categories, no LULUCF):
 
-- **Total error: 7.29 MtCO2e** across 34 categories
+- **Total error: ~7-8 MtCO2e** across 34 categories (see `calibration_log.md` for exact current value)
 - **Within 15%: 16/34 (47%)**
 - **Within 25%: 22/34 (65%)**
 - **NemoMod: ALL OPTIMAL**
@@ -1665,7 +1668,7 @@ $$\text{production}(t) = \text{prodinit} \times \prod_{i=0}^{t-1} (1 + \text{GDP
 
 **Always derive from NIR historical data** (regression of production vs GDP time series), never guess. Example: Morocco cement production declined from 14.25 Mt (2015) to 12.49 Mt (2022) while GDP grew 14% — giving elasticity ≈ -0.42. Using the template default of -2.0 would cause production collapse.
 
-IPPU production elasticities must be **constant** across all time periods (time-varying values cause production instability). For step-changes (e.g., new desalination plants), use `demscalar_ippu_{industry}` instead.
+IPPU production elasticities **should be kept constant** across all time periods — time-varying values are technically supported by the code but cause production instability in practice. For step-changes (e.g., new desalination plants), use `demscalar_ippu_{industry}` instead.
 
 ### Reverse Diagnostic Mapping
 
@@ -1903,7 +1906,7 @@ Before running policy scenarios, validate that Strategy 0 (baseline) produces a 
 |------|---------------|---------------|-----|-----------|
 | 2022 | ~100 Mt | 96.3 Mt | -4% | Good (within NIR calibration tolerance) |
 | 2030 | ~125 Mt | 103.5 Mt | -17% | Under — demand elasticities too conservative |
-| 2050 | ~200 Mt | 136.0 Mt | -32% | Significant divergence |
+| 2050 | ~170-180 Mt | 136.0 Mt | -20-25% | Significant divergence (SNBC reaches 218 Mt at 2060) |
 
 **Root causes of trajectory gaps** (Morocco example):
 - Transport elasticity 0.80 vs SNBC-implied 1.47 (motorization wave in middle-income country)
