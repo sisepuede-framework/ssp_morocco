@@ -1,0 +1,65 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE=$(cat | jq -r '.tool_input.file_path // empty'); echo \"$FILE\" | grep -q 'site-packages/sisepuede' && echo 'BLOCKED: Never modify sisepuede package. Fix via CSV inputs only.' >&2 && exit 2 || exit 0"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CMD=$(cat | jq -r '.tool_input.command // empty'); echo \"$CMD\" | grep -q 'run_calibration0' && echo 'REMINDER: Run compare_to_inventory.py on the output' || true"
+          },
+          {
+            "type": "command",
+            "command": "CMD=$(cat | jq -r '.tool_input.command // empty'); echo \"$CMD\" | grep -q 'apply_step' && python3 -c \"import pandas as pd,sys; df=pd.read_csv('ssp_modeling/input_data/df_input_0.csv'); n=df.isna().sum().sum(); i=sum(1 for c in df.select_dtypes('number').columns if df[c].apply(lambda x: x!=x or (isinstance(x,float) and abs(x)==float('inf'))).any()); print(f'Validation: inf={i}, NaN={n}') if n>0 or i>0 else print('Validation: clean')\" 2>/dev/null || true"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE=$(cat | jq -r '.tool_input.file_path // empty'); [ \"$(basename \"$FILE\")\" = 'CLAUDE.md' ] && CHARS=$(wc -c < \"$FILE\" 2>/dev/null) && [ \"$CHARS\" -gt 40000 ] && echo \"WARNING: CLAUDE.md is $CHARS chars (>40k threshold)\" || true"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "LATEST=$(ls -td ssp_modeling/ssp_run_output/calibration_* 2>/dev/null | head -1); [ -f \"$LATEST/diagnostics/diff_report.csv\" ] && python3 -c \"import pandas as pd; d=pd.read_csv('$LATEST/diagnostics/diff_report.csv'); s=d[d['inventory'].abs()>0.01]; print(f'Last calibration: {s[\"diff\"].abs().sum():.1f} MtCO2e | {(s[\"error_pct\"]<=15).sum()}/{len(s)} within 15%')\" 2>/dev/null || echo 'No previous calibration run found'"
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "rules": {
+      "allow": [
+        "Read",
+        "Glob",
+        "Grep"
+      ],
+      "deny": [
+        "Write(*/site-packages/sisepuede/*)",
+        "Edit(*/site-packages/sisepuede/*)",
+        "Bash(rm -rf)",
+        "Bash(git reset --hard)",
+        "Bash(git push --force)"
+      ]
+    }
+  }
+}
