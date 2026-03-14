@@ -182,10 +182,10 @@ fig = go.Figure(go.Sankey(
 for layer, name in LAYER_NAMES.items():
     fig.add_annotation(
         x=0.02 + layer * 0.19,
-        y=1.08,
-        text=f'<b>Step {layer+1}</b><br>{name}',
+        y=-0.06,
+        text=f'<b>Step {layer+1}</b>: {name}',
         showarrow=False,
-        font=dict(size=10, color='gray'),
+        font=dict(size=9, color='gray'),
         xref='paper', yref='paper',
     )
 
@@ -199,7 +199,7 @@ fig.update_layout(
     font=dict(size=10),
     width=1400,
     height=700,
-    margin=dict(l=20, r=20, t=100, b=20),
+    margin=dict(l=20, r=20, t=60, b=50),
 )
 
 fig.write_image(str(OUT_DIR / 'dag_sankey.png'), scale=2)
