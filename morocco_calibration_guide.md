@@ -2425,19 +2425,19 @@ NemoMod solves a linear program each time it's called:
 
 **Objective — minimize total discounted cost:**
 
-$$\min \sum_{r,y} \left[ \text{CapitalInvestment}_{r,y} + \text{FixedCost}_{r,y} + \text{VariableCost}_{r,y} + \text{EmissionPenalty}_{r,y} - \text{SalvageValue}_{r,y} \right]$$
+$$\min \sum_{r,y} \left[ \mathrm{CapitalInvestment}_{r,y} + \mathrm{FixedCost}_{r,y} + \mathrm{VariableCost}_{r,y} + \mathrm{EmissionPenalty}_{r,y} - \mathrm{SalvageValue}_{r,y} \right]$$
 
 **Subject to these constraints:**
 
 **Constraint 1 — Energy Balance** (must meet demand in every time slice):
 
-$$\text{Production}_{r,l,f,y} \geq \text{Demand}_{r,l,f,y} + \text{FuelUse}_{r,l,f,y}$$
+$$\mathrm{Production}_{r,l,f,y} \geq \mathrm{Demand}_{r,l,f,y} + \mathrm{FuelUse}_{r,l,f,y}$$
 
 *"You can't have blackouts. Every hour of every day, supply must meet demand."*
 
 **Constraint 2 — Capacity Adequacy** (can't run more than you have):
 
-$$\text{RateOfActivity}_{r,l,t,y} \leq \text{TotalCapacity}_{r,t,y} \times \text{CapToActivity} \times \text{AvailFactor}_{r,t,l,y}$$
+$$\mathrm{RateOfActivity}_{r,l,t,y} \leq \mathrm{TotalCapacity}_{r,t,y} \times \mathrm{CapToActivity} \times \mathrm{AvailFactor}_{r,t,l,y}$$
 
 *"A 5 GW coal plant can produce at most 5 × 31.536 PJ/yr × 0.85 availability = 134 PJ per year."*
 
@@ -2445,7 +2445,7 @@ Where `CapacityToActivityUnit ≈ 31.536` converts GW to PJ/yr (1 GW × 8760 hou
 
 **Constraint 3 — MinShareProduction** (policy floors):
 
-$$\text{Production}_{r,t,f,y} \geq \text{MSP}_{r,t,f,y} \times \text{TotalProduction}_{r,f,y}$$
+$$\mathrm{Production}_{r,t,f,y} \geq \mathrm{MSP}_{r,t,f,y} \times \mathrm{TotalProduction}_{r,f,y}$$
 
 *"At least X% of total electricity production must come from technology T."*
 
@@ -2453,13 +2453,13 @@ $$\text{Production}_{r,t,f,y} \geq \text{MSP}_{r,t,f,y} \times \text{TotalProduc
 
 **Constraint 4 — Capacity Accounting:**
 
-$$\text{TotalCapacity}_{r,t,y} = \text{ResidualCapacity}_{r,t,y} + \text{AccumulatedNewCapacity}_{r,t,y}$$
+$$\mathrm{TotalCapacity}_{r,t,y} = \mathrm{ResidualCapacity}_{r,t,y} + \mathrm{AccumulatedNewCapacity}_{r,t,y}$$
 
 *"Total installed capacity = what was already built (exogenous) + what NemoMod decided to build (endogenous)."*
 
 **Constraint 5 — Activity Limits** (if set):
 
-$$\text{TotalAnnualActivity}_{r,t,y} \leq \text{TotalTechnologyAnnualActivityUpperLimit}_{r,t,y}$$
+$$\mathrm{TotalAnnualActivity}_{r,t,y} \leq \mathrm{TotalTechnologyAnnualActivityUpperLimit}_{r,t,y}$$
 
 *"Technology T can produce at most X PJ per year, regardless of capacity."* This is not exposed in the input CSV for fp_* technologies.
 
