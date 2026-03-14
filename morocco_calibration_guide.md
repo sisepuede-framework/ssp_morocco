@@ -160,8 +160,8 @@ Output DataFrame (~56 rows × ~1600 emission columns)
 
 ### Model Execution Order
 
-![SISEPUEDE DAG: Sector Dependencies](guide_figures/dag_network.png)
-*Node size = emission magnitude at tp=7 (2022). Arrows show cascade direction through the 6-step pipeline.*
+![SISEPUEDE DAG: Emission Flow by Sector Dependency](guide_figures/dag_sankey.png)
+*Sankey diagram of the SISEPUEDE execution DAG. Flow width is proportional to source-node emission magnitude at tp=7 (2022). Layout follows the 6-step model execution order left to right. The convergence funnel into Electricity (32.8 Mt) shows why energy calibration dominates total error. An [interactive version](guide_figures/dag_sankey.html) is available for exploration.*
 
 ```python
 # Pseudocode: How SISEPUEDE executes
