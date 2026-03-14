@@ -160,6 +160,9 @@ Output DataFrame (~56 rows × ~1600 emission columns)
 
 ### Model Execution Order
 
+![SISEPUEDE DAG: Sector Dependencies](guide_figures/dag_network.png)
+*Node size = emission magnitude at tp=7 (2022). Arrows show cascade direction through the 6-step pipeline.*
+
 ```python
 # Pseudocode: How SISEPUEDE executes
 def run_sisepuede(input_data, strategies):
@@ -696,6 +699,9 @@ Where $\theta_f$ is the fuel share and $\sum_f \theta_f = 1$.
 
 > **Issue (IPCC Expert)**: Building non-CO2 gases show >95% error — model produces near-zero CH4/N2O from buildings. The energy demand calculation appears correct, but the non-CO2 emission factors may be missing or incorrectly configured.
 
+![End-Use Fuel Mix](guide_figures/fuel_donuts.png)
+*Demand fractions (alpha-D) at tp=0 for residential heat, commercial heat, and cement. Morocco residential is LPG-dominated; commercial is biomass-heavy; cement uses petroleum coke.*
+
 #### IEA Consumption Fractions vs SISEPUEDE Demand Fractions
 
 IEA energy balances report **consumption fractions** ($\alpha^C$) — what end-users actually burn. SISEPUEDE input columns (`frac_scoe_heat_energy_*`, `frac_inen_energy_*`) require **demand fractions** ($\alpha^D$) — fuel shares *before* efficiency adjustment. The conversion (see `mathdoc_energy.html`, Equation 2):
@@ -715,6 +721,9 @@ Where $\eta_f$ is the end-use efficiency for fuel $f$ (e.g., electricity $\appro
 Electricity's demand fraction (0.22) is much lower than its consumption fraction (0.30) because electricity is more efficient. Skipping this conversion overstates electricity demand and inflates ENTC CO2 through the NemoMod cascade.
 
 #### Industrial Energy Demand (inen)
+
+![INEN Fuel Demand Fractions by Industry](guide_figures/inen_fuel_heatmap.png)
+*14 industries x 10 fuels. Values are demand fractions (alpha-D) after IEA consumption-to-demand conversion. Cement has a distinct mix (coke-dominant) set from SNBC p.157.*
 
 $$E_{demand}^{inen} = \sum_{ind} VA_{ind} \cdot I_{ind}$$
 
@@ -772,6 +781,9 @@ Where:
 > **IPCC CH4 EFs vary 10x by sector.** IPCC Tables 2.2-2.3 (power/manufacturing) give biomass CH4 = **30 kg/TJ**, while Tables 2.4-2.5 (commercial/residential) give **300 kg/TJ**. SISEPUEDE uses ONE shared EF column for all subsectors — no per-subsector override exists. Setting biomass CH4 to 300 (residential) will overstate INEN; setting to 30 (power) will understate SCOE.
 
 #### NemoMod: Energy System Optimization
+
+![NemoMod Electricity Generation Mix](guide_figures/generation_mix.png)
+*Stacked area shows NemoMod dispatch by technology over all time periods. Red dashed line = calibration year (tp=7). Coal dominates early periods; renewables grow based on capacity investment constraints.*
 
 NemoMod solves a linear program for each year to determine the optimal electricity generation mix:
 
@@ -1748,6 +1760,12 @@ def apply_scaling(df, column, target_2022, ref_period=7):
 
 ### Current Morocco Calibration Status
 
+![Sector Totals: NIR Inventory vs Model](guide_figures/sector_totals.png)
+*Grouped bar comparing NIR inventory targets to SISEPUEDE model outputs by sector at tp=7 (2022). Green annotations = within 15%, red = exceeding threshold.*
+
+![Top 20 Category Gaps](guide_figures/category_gaps.png)
+*Horizontal bars show model minus inventory for each IPCC category, ranked by absolute error. Green = within 15%, orange = 15-25%, red = over 25%. These gaps drive the calibration priority order.*
+
 Based on NIR 2024 comparison at reference year 2022 (34 IPCC categories, no LULUCF):
 
 - **Total error: 7.29 MtCO2e** across 38 categories (see `calibration_log.md` for full audit trail)
@@ -1833,7 +1851,19 @@ The raw template CSV comes from a base country (Bulgaria for Morocco). **Systema
 
 > **Verified (Codebase Expert)**: 19.4% convergence is expected for a first-pass calibration. The reference notebook achieved similar convergence before multiple calibration iterations.
 
+![Emission Trajectory by Subsector](guide_figures/emission_trajectory.png)
+*Stacked area showing baseline emissions from tp=0 (2015) through 2070. Red dashed line = calibration year. Verify trajectory smoothness: no >10% jumps between consecutive periods.*
+
+![Gas-Level Totals](guide_figures/gas_totals.png)
+*Inventory vs model totals by greenhouse gas. CO2 dominates; check that CH4 and N2O individually match, not just the total.*
+
+![Calibration Progress](guide_figures/calibration_progress.png)
+*Left: total absolute error converging toward 15 MtCO2e target. Right: count of categories within 15% accuracy increasing with each iteration.*
+
 ### Sector-by-Sector Calibration Status
+
+![Manure Management Systems by Species](guide_figures/manure_management.png)
+*Stacked bar showing manure management fractions per species. Green = low-MCF systems (paddock ~1.5%), red = high-MCF systems (liquid slurry ~35%). Small shifts from paddock to liquid cause disproportionate CH4 increases.*
 
 #### Enteric Fermentation (3.A.1:CH4) — Good (-14%)
 Target 9.10 MtCO2e, model 7.84 MtCO2e. Gap largely from unmodeled species (camels + asses ≈ 0.34 Mt structural). Horse-equivalent adjustment narrows gap. Cattle, sheep, goat populations verified against FAO 2015.
