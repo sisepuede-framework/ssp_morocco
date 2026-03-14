@@ -1787,7 +1787,7 @@ SISEPUEDE models 9 livestock species (buffalo, cattle_dairy, cattle_nondairy, ch
 
 Production elasticities control how IPPU production volumes scale with GDP over time:
 
-$$\text{production}(t) = \text{prodinit} \times \prod_{i=0}^{t-1} (1 + \text{GDP\_rate}_i \times \text{elasticity})$$
+$$\text{production}(t) = \text{prodinit} \times \prod\nolimits_{i=0}^{t-1} \bigl(1 + \text{GDP rate}_{i} \times \text{elasticity}\bigr)$$
 
 **Always derive from NIR historical data** (regression of production vs GDP time series), never guess. Example: Morocco cement production declined from 14.25 Mt (2015) to 12.49 Mt (2022) while GDP grew 14% — giving elasticity ≈ -0.42. Using the template default of -2.0 would cause production collapse.
 
