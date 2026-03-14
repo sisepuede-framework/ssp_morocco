@@ -331,7 +331,7 @@ $$S_v^{(lvst)}(t) = D_v^{(lvst)}(t) - \tilde{P}_v^{(lvst)}(t)$$
 
 $$R_v(t) = \eta \cdot S_v^{(lvst)}(t)$$
 
-> **Verified (IPCC Expert)**: The livestock CH4 calibration achieves 3.9% error vs EDGAR — excellent. However, note the **allocation concern**: EDGAR reports a single livestock CH4 figure, but SISEPUEDE splits between enteric fermentation (`lvst`) and manure management (`lsmm`). Ensure the **sum** of both matches EDGAR, not each individually.
+> **Verified (IPCC Expert)**: The livestock CH4 calibration achieves 3.9% error vs NIR — excellent. However, note the **allocation concern**: the NIR reports a single livestock CH4 figure, but SISEPUEDE splits between enteric fermentation (`lvst`) and manure management (`lsmm`). Ensure the **sum** of both matches the inventory, not each individually.
 
 #### Forest Carbon Sequestration
 
@@ -347,7 +347,7 @@ Where the 44/12 ratio converts carbon to CO2.
 | Primary Forest | 0.25 - 0.3 (11-20x less) |
 | Mangroves | ~2.5 |
 
-> **Issue (IPCC Expert)**: Forest sequestration shows a **12.8x overestimate** (model: -12.05 vs EDGAR: -0.875 MtCO2e). Likely causes: overestimated forest area, or secondary forest rates applied too broadly. Morocco's actual forests are largely degraded and slow-growing — default tropical sequestration rates are likely too high.
+> **Issue (IPCC Expert)**: Forest sequestration shows a **12.8x overestimate** (model: -12.05 vs NIR: -0.875 MtCO2e). Likely causes: overestimated forest area, or secondary forest rates applied too broadly. Morocco's actual forests are largely degraded and slow-growing — default tropical sequestration rates are likely too high.
 
 #### Soil Carbon (IPCC Approach)
 
@@ -374,7 +374,7 @@ Where:
 
 > **Verified (IPCC Expert)**: EF1 = 0.01 kg N2O-N/kg N confirmed per IPCC 2006 Table 11.1.
 
-> **Issue (IPCC Expert)**: Despite correct EF1, AG Crops N2O shows **97% error** (model=0.14 vs EDGAR=4.62 MtCO2e). The emission factor is correct — the problem is that fertilizer application quantities (`qty_agrc_fertilizer_n_synthetic`) may be orders of magnitude too low in the input data.
+> **Issue (IPCC Expert)**: Despite correct EF1, AG Crops N2O shows **97% error** (model=0.14 vs NIR=4.62 MtCO2e). The emission factor is correct — the problem is that fertilizer application quantities (`qty_agrc_fertilizer_n_synthetic`) may be orders of magnitude too low in the input data.
 
 > **Advisory (IPCC Expert)**: IPCC 2019 Refinements introduce disaggregated N2O EF1 values by climate zone (wet vs dry), which are not yet incorporated in SISEPUEDE.
 
@@ -1555,13 +1555,13 @@ After a model run, verify:
 
 ### Overview
 
-Calibration is the iterative process of adjusting SISEPUEDE input parameters so that model outputs match observed emissions data (EDGAR) at the reference year (2022).
+Calibration is the iterative process of adjusting SISEPUEDE input parameters so that model outputs match the national GHG inventory (NIR) at the reference year (2022).
 
 ```
 ┌─────────────────────────────────────────────────────────┐
 │              ITERATIVE CALIBRATION LOOP                   │
 │                                                           │
-│   Input CSV ──▶ SISEPUEDE Run ──▶ Compare to EDGAR       │
+│   Input CSV ──▶ SISEPUEDE Run ──▶ Compare to NIR          │
 │       ▲                              │                    │
 │       │                              ▼                    │
 │       │                        Error > 25%?               │
@@ -1583,14 +1583,14 @@ $$\epsilon_i = \frac{|E^{SSP}_i - E^{INV}_i|}{|E^{INV}_i| + \varepsilon}$$
 
 Where:
 - $E^{SSP}_i$ = SISEPUEDE emission for category $i$
-- $E^{INV}_i$ = Inventory (EDGAR) emission for category $i$
+- $E^{INV}_i$ = Inventory (NIR) emission for category $i$
 - $\varepsilon$ = Small constant (1e-8) to avoid division by zero
 
 > **Verified (IPCC Expert)**: This relative-error metric is standard for emissions inventory comparison. The absolute-value denominator correctly handles negative values (sequestration sectors).
 
-### EDGAR Comparison Structure
+### Inventory Comparison Structure
 
-The emission targets file maps EDGAR categories to SISEPUEDE output columns:
+The emission targets file maps IPCC CRF categories to SISEPUEDE output columns:
 
 ### Building the Targets File
 
@@ -1655,7 +1655,7 @@ Saved to `{run_folder}/diagnostics/`:
 | `flagged.csv` | `parent_ID`, `component`, `value`, `share_pct` (breakdown of flagged categories) |
 | `diagnostics.csv` | `ID`, `issue`, `severity`, `detail` (structural warnings) |
 
-#### Diagnostic Checks (11 types)
+#### Diagnostic Checks (6 per-row + 4 sector-level + 1 cross-row = 11 total)
 
 | Check | Severity | Trigger | Action |
 |-------|----------|---------|--------|
@@ -1750,10 +1750,18 @@ def apply_scaling(df, column, target_2022, ref_period=7):
 
 Based on NIR 2024 comparison at reference year 2022 (34 IPCC categories, no LULUCF):
 
-- **Total error: ~7-8 MtCO2e** across 34 categories (see `calibration_log.md` for exact current value)
-- **Within 15%: 16/34 (47%)**
-- **Within 25%: 22/34 (65%)**
+- **Total error: 7.29 MtCO2e** across 38 categories (see `calibration_log.md` for full audit trail)
+- **Within 15%: 16/38 (42%)**
+- **Within 25%: 22/38 (58%)**
 - **NemoMod: ALL OPTIMAL**
+
+**Success criteria** (from CLAUDE.md Section 12):
+- Total inventory error: <=15 MtCO2e
+- Categories within 15%: >=40% of evaluated categories
+- Categories within 25%: >=55% of evaluated categories
+- NemoMod: ALL OPTIMAL
+- Trajectory: smooth (no >10% jumps between consecutive periods)
+- Every parameter change: logged with source citation
 
 Top remaining gaps:
 | Category | Inventory | Model | Error | Assessment |
@@ -1912,12 +1920,12 @@ WIDE_INPUTS_OUTPUTS.csv + ATTRIBUTE_*.csv
 [postprocessing_250820.r]  ← Master orchestrator
     │
     ├──▶ [run_script_baseline_run_new.r]
-    │       Loads EDGAR targets
+    │       Loads NIR inventory targets
     │       Calls intertemporal_decomposition.r
     │       Produces: decomposed_ssp_output.csv
     │
     ├──▶ [data_prep_new_mapping.r]
-    │       Maps SISEPUEDE columns to EDGAR categories
+    │       Maps SISEPUEDE columns to IPCC CRF categories
     │       Applies HP filter (λ=1600) for smoothing
     │       Produces: tableau/data/decomposed_emissions_*.csv
     │
@@ -1928,7 +1936,7 @@ WIDE_INPUTS_OUTPUTS.csv + ATTRIBUTE_*.csv
 ```
 
 Additional notebooks:
-- `create_diff_table.ipynb` → `diff_report_*.csv` (EDGAR comparison)
+- `create_diff_table.ipynb` → `diff_report_*.csv` (inventory comparison)
 - `create_levers_table.ipynb` → `tableau_levers_table_complete.csv`
 - `create_jobs_table.ipynb` → `jobs_demand_*.csv`
 
@@ -1936,12 +1944,12 @@ Additional notebooks:
 
 ### Intertemporal Decomposition
 
-The core postprocessing algorithm forces model outputs to match EDGAR at the reference year while preserving temporal dynamics:
+The core postprocessing algorithm forces model outputs to match the inventory at the reference year while preserving temporal dynamics:
 
 $$x_{calibrated}(t) = x_{uncalibrated}(t) \cdot \frac{x_{target}}{x_{uncalibrated}(t_{ref})}$$
 
 This is applied to every emission variable, ensuring that:
-1. At `year_ref = 2022`, model exactly matches EDGAR
+1. At `year_ref = 2022`, model exactly matches the inventory
 2. Before and after 2022, the model's growth dynamics are preserved
 3. The resulting trajectories are smooth (HP filter applied post-decomposition)
 
@@ -2162,7 +2170,7 @@ levers = svt.LeversImplementationTable(strategies)
 
 3. **Morocco Climate Zone**: Morocco spans multiple IPCC climate zones (warm temperate dry to tropical dry). Waste decay rates should be zone-specific but are currently set to single values.
 
-4. **Livestock CH4 Allocation**: EDGAR reports a single livestock CH4 figure, but SISEPUEDE splits it between enteric fermentation (`lvst`) and manure management (`lsmm`). Ensure the sum of both subsectors matches EDGAR, not each individually.
+4. **Livestock CH4 Allocation**: The NIR reports a single livestock CH4 figure, but SISEPUEDE splits it between enteric fermentation (`lvst`) and manure management (`lsmm`). Ensure the sum of both subsectors matches the inventory, not each individually.
 
 5. **GWP Version**: AR5 GWPs are used throughout. If switching to AR6, all CO2e values will change slightly (CH4: 28→27.9, N2O: 265→273).
 
@@ -2335,7 +2343,7 @@ Coal MSP = 2% means NemoMod must produce at least 2% of **total electricity prod
 Coal MSP response curve (empirical, with current demand inflation):
   MSP = 0%  →  ENTC CO2 =   2.2 MtCO2e  (NemoMod dispatches minimal coal)
   MSP = 1%  →  ENTC CO2 =  14.4 MtCO2e
-  MSP = 2%  →  ENTC CO2 =  27.5 MtCO2e  ← matches EDGAR!
+  MSP = 2%  →  ENTC CO2 =  27.5 MtCO2e  ← matches NIR!
   MSP = 5%  →  ENTC CO2 =  65.7 MtCO2e
 ```
 
@@ -2693,7 +2701,7 @@ STEP 5: Set MSP to approximate generation shares
 STEP 6: Run model and check ENTC CO2
   If too high → reduce coal MSP or increase renewable MSP
   If too low → increase coal MSP
-  Iterate until ENTC CO2 matches EDGAR within ±5%.
+  Iterate until ENTC CO2 matches the NIR within ±5%.
 
 STEP 7: Check FGTV emissions
   If > 1 MtCO2e and no refinery → crude import fraction wrong

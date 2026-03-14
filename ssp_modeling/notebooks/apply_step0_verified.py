@@ -240,6 +240,8 @@ n_inf = sum(np.isinf(df[c]).sum() for c in df.select_dtypes(include=[np.number])
 n_nan = df.isna().sum().sum()
 print(f"inf: {n_inf}, NaN: {n_nan}")
 if n_nan > 0:
+    nan_cols = [c for c in df.columns if df[c].isna().any()]
+    print(f"  WARNING: NaN in {len(nan_cols)} columns, filling with 0: {nan_cols[:10]}")
     df = df.fillna(0)
 
 df.to_csv(OUT_CSV, index=False)
@@ -456,15 +458,17 @@ for col in [c for c in df.columns if c.startswith('exports_enfu_pj_fuel_')]:
 # FINAL SAVE
 # ═══════════════════════════════════════════════════════════════════════════
 print("\n" + "="*80)
-print("FINAL SAVE")
+print("INTERMEDIATE SAVE (before transport/IPPU/waste)")
 print("="*80)
 n_inf = sum(np.isinf(df[c]).sum() for c in df.select_dtypes(include=[np.number]).columns)
 n_nan = df.isna().sum().sum()
 print(f"inf: {n_inf}, NaN: {n_nan}")
 if n_nan > 0:
+    nan_cols = [c for c in df.columns if df[c].isna().any()]
+    print(f"  WARNING: NaN in {len(nan_cols)} columns, filling with 0: {nan_cols[:10]}")
     df = df.fillna(0)
 df.to_csv(OUT_CSV, index=False)
-df.to_csv(str(OUT_CSV) + '.bak_step0', index=False)
+df.to_csv(str(OUT_CSV) + '.bak_step0_energy', index=False)
 print(f"Saved to {OUT_CSV}")
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -713,6 +717,8 @@ n_inf = sum(np.isinf(df[c]).sum() for c in df.select_dtypes(include=[np.number])
 n_nan = df.isna().sum().sum()
 print(f"inf: {n_inf}, NaN: {n_nan}")
 if n_nan > 0:
+    nan_cols = [c for c in df.columns if df[c].isna().any()]
+    print(f"  WARNING: NaN in {len(nan_cols)} columns, filling with 0: {nan_cols[:10]}")
     df = df.fillna(0)
 df.to_csv(OUT_CSV, index=False)
 df.to_csv(str(OUT_CSV) + '.bak_step0', index=False)

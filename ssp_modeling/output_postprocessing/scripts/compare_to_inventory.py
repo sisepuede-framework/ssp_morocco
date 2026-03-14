@@ -350,7 +350,15 @@ def _check_gas_ratios(diff, min_mag):
         for gn, gr in [('CH4', grp[grp['gas'] == 'CH4']), ('N2O', grp[grp['gas'] == 'N2O'])]:
             if len(gr) == 0 or gr.iloc[0]['inventory'] < min_mag * 0.1:
                 continue
-            r_g = gr.iloc[0]['model'] / gr.iloc[0]['inventory'] if abs(gr.iloc[0]['inventory']) > 1e-6 else 0
+            if abs(gr.iloc[0]['inventory']) < 1e-6:
+                if abs(gr.iloc[0]['model']) > min_mag:
+                    warnings.append(dict(
+                        ID=gr.iloc[0]['ID'], category=gr.iloc[0].get('category', ''),
+                        gas=gn, sector=sec, inventory=gr.iloc[0]['inventory'],
+                        model=gr.iloc[0]['model'], issue='GAS_RATIO', severity='MEDIUM',
+                        detail=f'Inventory {gn}=0 but model={gr.iloc[0]["model"]:.4f}. Check if inventory excludes {gn}.'))
+                continue
+            r_g = gr.iloc[0]['model'] / gr.iloc[0]['inventory']
             if abs(r_co2 - 1) < GAS_RATIO_TOL and abs(r_g - 1) > GAS_RATIO_DEVIATE:
                 warnings.append(dict(
                     ID=gr.iloc[0]['ID'], category=gr.iloc[0].get('category', ''),

@@ -440,6 +440,8 @@ n_inf = sum(np.isinf(df[c]).sum() for c in df.select_dtypes(include=[np.number])
 n_nan = df.isna().sum().sum()
 print(f"inf: {n_inf}, NaN: {n_nan}")
 if n_nan > 0:
+    nan_cols = [c for c in df.columns if df[c].isna().any()]
+    print(f"  WARNING: NaN in {len(nan_cols)} columns, filling with 0: {nan_cols[:10]}")
     df = df.fillna(0)
 df.to_csv(CSV, index=False)
 print(f"Saved to {CSV}")
@@ -508,18 +510,15 @@ print("  Agriculture fuel: diesel=0.876, bio=0.124 (NIR T44: only liquid+biomass
 # SISEPUEDE uses one shared EF for all subsectors (structural limitation)
 # Setting to 0.300 (IPCC T2.5 residential value) since SCOE biomass >> INEN biomass
 # Source: IPCC 2006 V2 Ch2 Table 2.5 p.22-23, confirmed by NIR T44 p.133
-# Note: SISEPUEDE has TWO biomass EF columns: fuel_biomass AND fuel_solid_biomass
-# Both need to be set to the residential/commercial value
-# Units: column name says "tonne_ch4_per_tj" but template value 0.016 = 16 kg/TJ
-# So the column is actually in TONNE per TJ where 0.016 = 16 kg/TJ = 0.016 t/TJ
-# 300 kg/TJ = 0.300 t/TJ, 4 kg/TJ = 0.004 t/TJ
-for suffix in ['biomass', 'solid_biomass']:
-    col_ch4 = f'ef_enfu_stationary_combustion_tonne_ch4_per_tj_fuel_{suffix}'
-    col_n2o = f'ef_enfu_stationary_combustion_tonne_n2o_per_tj_fuel_{suffix}'
-    if col_ch4 in df.columns:
-        df[col_ch4] = 0.300  # 300 kg/TJ = 0.300 tonne/TJ (IPCC T2.5 residential)
-    if col_n2o in df.columns:
-        df[col_n2o] = 0.004  # 4 kg/TJ = 0.004 tonne/TJ (IPCC T2.5 residential)
+# Only fuel_biomass has EF columns; fuel_solid_biomass does NOT exist in SISEPUEDE
+# (solid_biomass appears only in demand fraction columns, not EF columns)
+# Units: column is in TONNE per TJ (0.016 = 16 kg/TJ, 0.300 = 300 kg/TJ)
+col_ch4 = 'ef_enfu_stationary_combustion_tonne_ch4_per_tj_fuel_biomass'
+col_n2o = 'ef_enfu_stationary_combustion_tonne_n2o_per_tj_fuel_biomass'
+if col_ch4 in df.columns:
+    df[col_ch4] = 0.300  # 300 kg/TJ = 0.300 tonne/TJ (IPCC T2.5 residential)
+if col_n2o in df.columns:
+    df[col_n2o] = 0.004  # 4 kg/TJ = 0.004 tonne/TJ (IPCC T2.5 residential)
 print("  Biomass CH4 EF: -> 300 kg/TJ (IPCC T2.5 p.22 + NIR T44 p.133: 298.66)")
 print("  Biomass N2O EF: -> 4 kg/TJ (IPCC T2.5 p.22 + NIR T44 p.133: 3.96)")
 

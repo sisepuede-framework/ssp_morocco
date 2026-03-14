@@ -195,9 +195,8 @@ ssp_modeling/input_data/df_input_0.csv
 ssp_modeling/input_data/df_input_0.csv.bak*
 
 # Claude Code internals
-.claude/settings.local.json
-.claude/worktrees/
-.claude/claude_code_ref.md
+.claude/
+CLAUDE.md
 
 # Deliverable artifacts
 deliverable_1_workplan.md

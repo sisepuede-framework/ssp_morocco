@@ -193,7 +193,11 @@ def run_model(config, strategies, attr_tp, strategies_to_run, energy_flag=None):
     valid = [s for s in strategies_to_run if s in strategies.all_strategies]
     missing = [s for s in strategies_to_run if s not in strategies.all_strategies]
     if missing:
-        log.warning(f"Strategies not found: {missing}. Available: {sorted(strategies.all_strategies)}")
+        raise ValueError(
+            f"Strategies not found: {missing}. "
+            f"Available: {sorted(strategies.all_strategies)}. "
+            f"Fix --strategies or check transformations directory."
+        )
     if not valid:
         raise ValueError("No valid strategies to run!")
 
