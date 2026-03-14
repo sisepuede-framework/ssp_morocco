@@ -160,7 +160,7 @@ for s in nodes:
     node_y.append(Y_POS.get(s, 0.5))
 
 fig = go.Figure(go.Sankey(
-    arrangement='snap',
+    arrangement='fixed',
     node=dict(
         pad=15,
         thickness=20,
