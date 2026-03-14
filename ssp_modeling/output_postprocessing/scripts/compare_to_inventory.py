@@ -48,9 +48,18 @@ DAG_ORDER = {
 }
 
 DAG_AFFECTS: Dict[str, List[str]] = {
-    'lvst': ['lsmm', 'soil', 'lndu', 'agrc'], 'lsmm': ['soil'],
-    'agrc': ['soil', 'inen', 'entc'], 'soil': [], 'lndu': ['frst', 'soil', 'agrc'],
-    'frst': [], 'waso': ['entc'], 'trww': [], 'ippu': ['inen', 'entc'],
+    # AFOLU (Step 1) — source: sisepuede/models/circular_economy.py:248, energy_consumption.py:299
+    'lvst': ['lsmm', 'soil', 'lndu', 'agrc', 'waso', 'inen'],  # waso: animal mass/demand; inen: ag energy
+    'lsmm': ['soil', 'entc'],               # entc: recovered manure biogas (energy_production.py:358)
+    'agrc': ['soil', 'inen', 'entc', 'waso'],  # waso: food loss to MSW (circular_economy.py:249)
+    'soil': [], 'lndu': ['frst', 'soil', 'agrc'], 'frst': [],
+    # Circular Economy (Step 2) — source: ippu.py:234, energy_production.py:360-367
+    'waso': ['entc', 'ippu'],               # ippu: recycled waste reduces production; entc: biogas+incineration
+    'trww': ['entc'],                        # entc: WW recovered biogas (energy_production.py:360)
+    'wali': [],
+    # IPPU (Step 3)
+    'ippu': ['inen', 'entc'],
+    # Energy (Steps 4-6)
     'inen': ['entc', 'fgtv'], 'scoe': ['entc', 'fgtv'], 'trns': ['entc', 'fgtv'],
     'entc': ['fgtv'], 'fgtv': [], 'ccsq': [],
 }
