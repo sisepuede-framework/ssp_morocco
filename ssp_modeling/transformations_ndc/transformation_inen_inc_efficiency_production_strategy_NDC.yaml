@@ -1,0 +1,21 @@
+citations:
+  - 'SNBC Ch.7.4 p.75: Production process optimization for reduced material intensity'
+  - 'SNBC Table 15 p.158: Material efficiency and circular economy in industry'
+description: >-
+  SNBC Net Zero: 20% industrial production efficiency gain through material
+  efficiency and circular economy measures. Magnitude of 0.80 as baseline_scalar
+  means 20% improvement in production efficiency. Linear ramp from tp 10 (2025)
+  over 25 periods for steady optimization.
+identifiers:
+  transformation_code: "TX:INEN:INC_EFFICIENCY_PRODUCTION_STRATEGY_NDC"
+  transformation_name: "SNBC Net Zero - INEN: 20% production efficiency improvement"
+parameters:
+  categories: null
+  magnitude: 0.80
+  magnitude_type: baseline_scalar
+  vec_implementation_ramp:
+    tp_0_ramp: 10
+    n_tp_ramp: 25
+    alpha_logistic: 0.0
+    window_logistic: [-8, 8]
+transformer: "TFR:INEN:INC_EFFICIENCY_PRODUCTION"

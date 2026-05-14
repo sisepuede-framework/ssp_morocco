@@ -1,0 +1,18 @@
+citations:
+  - "SNBC Ch.7.6-7.7, Tables 17-18 -- 1.8M ha agroforestry"
+description: >-
+  SNBC Net Zero: Expand silvopasture to 1.8 million ha of agroforestry.
+  Magnitude of 0.15 represents the fraction of pastures with planted forest
+  cover for enhanced carbon sequestration. Mild sigmoid for biological
+  growth dynamics.
+identifiers:
+  transformation_code: "TX:LNDU:INC_SILVOPASTURE_STRATEGY_NDC"
+  transformation_name: "SNBC NDC - LNDU: 1.8M ha agroforestry"
+parameters:
+  magnitude: 0.15
+  vec_implementation_ramp:
+    tp_0_ramp: 10
+    n_tp_ramp: 25
+    alpha_logistic: 0.2
+    window_logistic: [-8, 8]
+transformer: "TFR:LNDU:INC_SILVOPASTURE"

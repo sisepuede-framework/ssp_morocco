@@ -1,0 +1,17 @@
+citations:
+  - "SNBC Ch.7.7 p.80, Table 18 -- 146,000 ha rangeland restoration"
+description: >-
+  SNBC Net Zero: Reduce soil organic carbon loss in grasslands through
+  sustainable grazing practices and 146,000 ha rangeland restoration.
+  Magnitude of 0.80 increases the grassland management factor.
+identifiers:
+  transformation_code: "TX:LNDU:DEC_SOC_LOSS_PASTURES_STRATEGY_NDC"
+  transformation_name: "SNBC NDC - LNDU: Sustainable grazing and rangeland restoration"
+parameters:
+  magnitude: 0.80
+  vec_implementation_ramp:
+    tp_0_ramp: 10
+    n_tp_ramp: 25
+    alpha_logistic: 0.0
+    window_logistic: [-8, 8]
+transformer: "TFR:LNDU:DEC_SOC_LOSS_PASTURES"

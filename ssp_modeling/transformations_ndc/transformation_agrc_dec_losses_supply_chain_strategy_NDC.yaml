@@ -1,0 +1,16 @@
+citations:
+  - "SNBC Ch.7.6 p.79, Table 17 -- Cold chain and storage improvements"
+description: >-
+  SNBC Net Zero: Reduce supply chain losses by 30% through cold chain
+  infrastructure and improved storage facilities.
+identifiers:
+  transformation_code: "TX:AGRC:DEC_LOSSES_SUPPLY_CHAIN_STRATEGY_NDC"
+  transformation_name: "SNBC NDC - AGRC: 30% supply chain loss reduction"
+parameters:
+  magnitude: 0.30
+  vec_implementation_ramp:
+    tp_0_ramp: 10
+    n_tp_ramp: 25
+    alpha_logistic: 0.0
+    window_logistic: [-8, 8]
+transformer: "TFR:AGRC:DEC_LOSSES_SUPPLY_CHAIN"

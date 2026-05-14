@@ -1,0 +1,21 @@
+citations:
+  - 'SNBC Ch.7.4 p.75: 17% energy efficiency improvement by 2030, additional 10% by 2050'
+  - 'SNBC Table 15 p.158: Industrial energy efficiency measures'
+description: >-
+  SNBC Net Zero: 25% industrial energy efficiency improvement (17% by 2030,
+  additional 10% by 2050). Aggregates multiple SNBC industrial efficiency
+  measures. Magnitude of 0.75 as baseline_scalar means final energy consumption
+  is 75% of what it would have been (i.e., 25% reduction). Linear ramp from
+  tp 7 (2022) over 28 periods reflects steady incremental improvements.
+identifiers:
+  transformation_code: "TX:INEN:INC_EFFICIENCY_ENERGY_STRATEGY_NDC"
+  transformation_name: "SNBC Net Zero - INEN: 25% industrial energy efficiency improvement"
+parameters:
+  magnitude: 0.75
+  magnitude_type: baseline_scalar
+  vec_implementation_ramp:
+    tp_0_ramp: 7
+    n_tp_ramp: 28
+    alpha_logistic: 0.0
+    window_logistic: [-8, 8]
+transformer: "TFR:INEN:INC_EFFICIENCY_ENERGY"

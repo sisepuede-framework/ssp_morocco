@@ -1,0 +1,26 @@
+citations:
+  - 'SNBC Ch.7.3 p.72-74: Electric cooking transition 2025-2050, heat pump heating, electric hot water'
+  - 'SNBC Table 13 p.149-152: Fuel switching from butane/biomass to electricity for cooking and heating'
+  - 'SNBC Table 14 p.155: Electrification of tertiary building energy services'
+description: >-
+  SNBC Net Zero: 90% electrification of building heat (cooking, heating, hot
+  water). Replaces butane and biomass with electricity. Sigmoid adoption curve.
+  Magnitude of 0.90 as final_value means 90% of building heat services switch
+  to electricity by 2050. Sigmoid ramp from tp 10 (2025) over 25 periods with
+  alpha 0.5 reflects accelerating adoption as electric appliance costs decline
+  and grid capacity expands.
+identifiers:
+  transformation_code: "TX:SCOE:SHIFT_FUEL_HEAT_STRATEGY_NDC"
+  transformation_name: "SNBC Net Zero - SCOE: Electrify 90% of building heat by 2050"
+parameters:
+  cat_enfu_target: null
+  cats_enfu_source: null
+  cats_scoe_apply: null
+  magnitude: 0.90
+  magnitude_type: final_value
+  vec_implementation_ramp:
+    tp_0_ramp: 10
+    n_tp_ramp: 25
+    alpha_logistic: 0.5
+    window_logistic: [-8, 8]
+transformer: "TFR:SCOE:SHIFT_FUEL_HEAT"

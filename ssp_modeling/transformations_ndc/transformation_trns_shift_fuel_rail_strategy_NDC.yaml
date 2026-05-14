@@ -1,0 +1,20 @@
+citations:
+  - 'SNBC Ch.7.5, Table 16 -- 100% green energy railways by 2040'
+description: >-
+  SNBC Net Zero: 95% clean rail by 2040 (83% electric + 17% hydrogen). Morocco
+  Rail Plan 2040.
+identifiers:
+  transformation_code: "TX:TRNS:SHIFT_FUEL_RAIL_STRATEGY_NDC"
+  transformation_name: "SNBC NDC - TRNS: 95% clean rail by 2040"
+parameters:
+  categories:
+  - rail_freight
+  - rail_passenger
+  dict_fuel_allocation: null
+  magnitude: 0.95
+  vec_implementation_ramp:
+    tp_0_ramp: 7
+    n_tp_ramp: 18
+    alpha_logistic: 0.6
+    window_logistic: [-8, 8]
+transformer: "TFR:TRNS:SHIFT_FUEL_RAIL"

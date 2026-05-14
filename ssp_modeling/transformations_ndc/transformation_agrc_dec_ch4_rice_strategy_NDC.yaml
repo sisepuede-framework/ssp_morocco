@@ -1,0 +1,16 @@
+citations:
+  - "SNBC Ch.7.6 p.79, Table 17 -- Rice CH4 reduction via alternate wetting-drying"
+description: >-
+  SNBC Net Zero: Reduce CH4 emissions from rice production by 45% through
+  alternate wetting-drying and improved water management practices.
+identifiers:
+  transformation_code: "TX:AGRC:DEC_CH4_RICE_STRATEGY_NDC"
+  transformation_name: "SNBC NDC - AGRC: 45% rice CH4 reduction"
+parameters:
+  magnitude: 0.45
+  vec_implementation_ramp:
+    tp_0_ramp: 10
+    n_tp_ramp: 25
+    alpha_logistic: 0.0
+    window_logistic: [-8, 8]
+transformer: "TFR:AGRC:DEC_CH4_RICE"

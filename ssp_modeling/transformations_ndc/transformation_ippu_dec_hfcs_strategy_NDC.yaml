@@ -1,0 +1,17 @@
+citations:
+  - "SNBC Ch.7.4, Table 15 -- HFC phase-down (Kigali Amendment)"
+description: >-
+  SNBC Net Zero: Phase down HFC use to 15% of baseline (85% reduction)
+  by 2050, consistent with the Kigali Amendment schedule. Mild sigmoid
+  ramp reflecting accelerating phase-down in later periods.
+identifiers:
+  transformation_code: "TX:IPPU:DEC_HFCS_STRATEGY_NDC"
+  transformation_name: "SNBC NDC - IPPU: HFC phase-down 85%"
+parameters:
+  magnitude: 0.15
+  vec_implementation_ramp:
+    tp_0_ramp: 10
+    n_tp_ramp: 25
+    alpha_logistic: 0.3
+    window_logistic: [-8, 8]
+transformer: "TFR:IPPU:DEC_HFCS"

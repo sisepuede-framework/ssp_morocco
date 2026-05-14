@@ -1,0 +1,24 @@
+citations:
+  - 'SNBC Ch.7.5, Table 16 -- 50% electric + 50% hydrogen heavy vehicles by 2050'
+description: >-
+  SNBC Net Zero: 90% clean fuel for heavy-duty vehicles by 2050 (50% electric,
+  50% hydrogen).
+identifiers:
+  transformation_code: "TX:TRNS:SHIFT_FUEL_MEDIUM_DUTY_STRATEGY_NDC"
+  transformation_name: "SNBC NDC - TRNS: Clean fuel heavy-duty transport by 2050"
+parameters:
+  categories:
+  - road_heavy_freight
+  - road_heavy_regional
+  - public
+  dict_allocation_fuels_target: null
+  fuels_source:
+  - fuel_diesel
+  - fuel_gasoline
+  magnitude: 0.90
+  vec_implementation_ramp:
+    tp_0_ramp: 10
+    n_tp_ramp: 25
+    alpha_logistic: 0.7
+    window_logistic: [-8, 8]
+transformer: "TFR:TRNS:SHIFT_FUEL_MEDIUM_DUTY"

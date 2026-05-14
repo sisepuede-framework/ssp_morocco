@@ -1,0 +1,16 @@
+citations:
+  - "SNBC Ch.7.6 p.79, Table 17 -- Reduce lime application"
+description: >-
+  SNBC Net Zero: Reduce lime application to soils by 15% through improved
+  soil management practices.
+identifiers:
+  transformation_code: "TX:SOIL:DEC_LIME_APPLIED_STRATEGY_NDC"
+  transformation_name: "SNBC NDC - SOIL: 15% lime reduction"
+parameters:
+  magnitude: 0.15
+  vec_implementation_ramp:
+    tp_0_ramp: 10
+    n_tp_ramp: 25
+    alpha_logistic: 0.0
+    window_logistic: [-8, 8]
+transformer: "TFR:SOIL:DEC_LIME_APPLIED"

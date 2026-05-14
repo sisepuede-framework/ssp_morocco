@@ -1,0 +1,17 @@
+citations:
+  - "SNBC Ch.7.4 p.75, Table 15 -- Clinker ratio 0.65 by 2030"
+description: >-
+  SNBC Net Zero: Reduce clinker-to-cement ratio to 0.65 by 2030.
+  Short sigmoid ramp reflecting near-term cement sector reform
+  with supplementary cementitious materials.
+identifiers:
+  transformation_code: "TX:IPPU:DEC_CLINKER_STRATEGY_NDC"
+  transformation_name: "SNBC NDC - IPPU: Clinker ratio 0.65 by 2030"
+parameters:
+  magnitude: 0.65
+  vec_implementation_ramp:
+    tp_0_ramp: 7
+    n_tp_ramp: 8
+    alpha_logistic: 0.5
+    window_logistic: [-8, 8]
+transformer: "TFR:IPPU:DEC_CLINKER"

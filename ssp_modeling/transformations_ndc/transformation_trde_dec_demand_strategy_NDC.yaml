@@ -1,0 +1,16 @@
+citations:
+  - 'SNBC Ch.7.5 p.78, Table 16 -- Demand reduction through digitalization'
+description: >-
+  SNBC Net Zero: 15% transport demand reduction through digitalization, telework,
+  and urban densification.
+identifiers:
+  transformation_code: "TX:TRDE:DEC_DEMAND_STRATEGY_NDC"
+  transformation_name: "SNBC NDC - TRDE: 15% transport demand reduction"
+parameters:
+  magnitude: 0.85
+  vec_implementation_ramp:
+    tp_0_ramp: 10
+    n_tp_ramp: 25
+    alpha_logistic: 0.0
+    window_logistic: [-8, 8]
+transformer: "TFR:TRDE:DEC_DEMAND"

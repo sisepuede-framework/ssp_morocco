@@ -1,0 +1,18 @@
+citations:
+  - "SNBC Ch.7.6 p.79, Table 17 -- Feed additives and breed improvement"
+description: >-
+  SNBC Net Zero: Reduce enteric fermentation emissions through feed additives
+  and breed improvement programs. Uses default dict parameters for
+  category-level reductions.
+identifiers:
+  transformation_code: "TX:LVST:DEC_ENTERIC_FERMENTATION_STRATEGY_NDC"
+  transformation_name: "SNBC NDC - LVST: Reduce enteric fermentation"
+parameters:
+  dict_lvst_reductions: null
+  return_reductions_dict: false
+  vec_implementation_ramp:
+    tp_0_ramp: 10
+    n_tp_ramp: 25
+    alpha_logistic: 0.0
+    window_logistic: [-8, 8]
+transformer: "TFR:LVST:DEC_ENTERIC_FERMENTATION"

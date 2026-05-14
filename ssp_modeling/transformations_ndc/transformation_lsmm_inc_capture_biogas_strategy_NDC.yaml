@@ -1,0 +1,16 @@
+citations:
+  - "SNBC Ch.7.6 p.79, Table 17 -- 85% biogas capture from manure"
+description: >-
+  SNBC Net Zero: Increase biogas capture at anaerobic manure treatment
+  facilities to 85%. Mild sigmoid ramp for infrastructure deployment.
+identifiers:
+  transformation_code: "TX:LSMM:INC_CAPTURE_BIOGAS_STRATEGY_NDC"
+  transformation_name: "SNBC NDC - LSMM: 85% biogas capture from manure"
+parameters:
+  magnitude: 0.85
+  vec_implementation_ramp:
+    tp_0_ramp: 10
+    n_tp_ramp: 25
+    alpha_logistic: 0.3
+    window_logistic: [-8, 8]
+transformer: "TFR:LSMM:INC_CAPTURE_BIOGAS"

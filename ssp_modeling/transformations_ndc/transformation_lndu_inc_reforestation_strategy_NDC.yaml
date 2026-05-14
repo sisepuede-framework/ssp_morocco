@@ -1,0 +1,21 @@
+citations:
+  - "SNBC Ch.7.7 p.80, Table 18 -- 1.5 million ha reforestation by 2050"
+description: >-
+  SNBC Net Zero: Reforest 1.5 million ha by 2050 by converting degraded
+  croplands and other marginal land to secondary forest. Magnitude of 0.25
+  represents the fraction of eligible inflow land classes converting to
+  forest. Mild sigmoid for biological growth constraints.
+identifiers:
+  transformation_code: "TX:LNDU:INC_REFORESTATION_STRATEGY_NDC"
+  transformation_name: "SNBC NDC - LNDU: 1.5M ha reforestation by 2050"
+parameters:
+  cats_inflow_restriction:
+    - croplands
+    - other
+  magnitude: 0.25
+  vec_implementation_ramp:
+    tp_0_ramp: 7
+    n_tp_ramp: 28
+    alpha_logistic: 0.2
+    window_logistic: [-8, 8]
+transformer: "TFR:LNDU:INC_REFORESTATION"

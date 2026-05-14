@@ -1,0 +1,17 @@
+citations:
+  - "SNBC Ch.7.8, Table 19 -- 80% energy recovery from incineration"
+description: >-
+  SNBC Net Zero: Increase energy recovery from waste incineration to
+  80% by 2050. Sigmoid ramp reflecting gradual incineration plant
+  upgrades and new facility commissioning.
+identifiers:
+  transformation_code: "TX:WASO:INC_ENERGY_FROM_INCINERATION_STRATEGY_NDC"
+  transformation_name: "SNBC NDC - WASO: 80% incineration energy recovery"
+parameters:
+  magnitude: 0.80
+  vec_implementation_ramp:
+    tp_0_ramp: 10
+    n_tp_ramp: 25
+    alpha_logistic: 0.4
+    window_logistic: [-8, 8]
+transformer: "TFR:WASO:INC_ENERGY_FROM_INCINERATION"

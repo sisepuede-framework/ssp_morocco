@@ -1,0 +1,21 @@
+citations:
+  - 'SNBC Ch.7.2 p.70, Table 5 Ind 1.1 -- 96% carbon-neutral centralized electricity by 2050'
+description: >-
+  SNBC Net Zero: 96% of centralized electricity from carbon-neutral sources by
+  2050. 85 GW renewable capacity (50 GW solar + 35 GW wind). Sigmoid ramp
+  reflects accelerating RE deployment.
+identifiers:
+  transformation_code: "TX:ENTC:TARGET_RENEWABLE_ELEC_STRATEGY_NDC"
+  transformation_name: "SNBC Net Zero - ENTC: 96% renewable electricity by 2050"
+parameters:
+  categories_entc_max_investment_ramp: null
+  categories_entc_renewable: null
+  dict_entc_renewable_target_msp: {}
+  magnitude: 0.96
+  scale_non_renewables_to_match_surplus_msp: false
+  vec_implementation_ramp:
+    tp_0_ramp: 7
+    n_tp_ramp: 28
+    alpha_logistic: 0.7
+    window_logistic: [-8, 8]
+transformer: "TFR:ENTC:TARGET_RENEWABLE_ELEC"

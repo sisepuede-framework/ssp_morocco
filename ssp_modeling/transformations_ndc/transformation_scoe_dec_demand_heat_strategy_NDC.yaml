@@ -1,0 +1,23 @@
+citations:
+  - 'SNBC Ch.7.3 p.72-74: Residential heat demand reduction -31%, tertiary -50%'
+  - 'SNBC Table 13 p.149-152: Building envelope improvements, insulation, thermal codes'
+  - 'SNBC Table 14 p.155: Tertiary building energy performance standards'
+description: >-
+  SNBC Net Zero: 40% weighted reduction in building heat demand (residential
+  -31%, tertiary -50%). Thermal building codes and retrofit programs. The
+  blended magnitude of 0.60 as baseline_scalar represents ~40% average reduction
+  weighted across residential (larger stock, 31% cut) and tertiary (smaller
+  stock, 50% cut). Linear ramp from tp 10 (2025) over 25 periods for steady
+  retrofit implementation and building code tightening.
+identifiers:
+  transformation_code: "TX:SCOE:DEC_DEMAND_HEAT_STRATEGY_NDC"
+  transformation_name: "SNBC Net Zero - SCOE: Reduce building heat demand by 40%"
+parameters:
+  magnitude: 0.60
+  magnitude_type: baseline_scalar
+  vec_implementation_ramp:
+    tp_0_ramp: 10
+    n_tp_ramp: 25
+    alpha_logistic: 0.0
+    window_logistic: [-8, 8]
+transformer: "TFR:SCOE:DEC_DEMAND_HEAT"

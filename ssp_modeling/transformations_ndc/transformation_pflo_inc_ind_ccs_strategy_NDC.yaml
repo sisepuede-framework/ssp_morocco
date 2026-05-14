@@ -1,0 +1,20 @@
+citations:
+  - "SNBC Ch.7.4 p.75, Table 15 -- Phosphate CCS 25%/2030, 50%/2040; Cement CCS 50%/2060"
+description: >-
+  SNBC Net Zero: Implement industrial carbon capture and sequestration
+  at phosphate and cement facilities. CCS efficiency target 90%.
+  Sigmoid ramp reflecting long-term CCS deployment trajectory
+  (phosphate 25% by 2030, 50% by 2040; cement 50% by 2060).
+identifiers:
+  transformation_code: "TX:PFLO:INC_IND_CCS_STRATEGY_NDC"
+  transformation_name: "SNBC NDC - PFLO: Industrial CCS deployment"
+parameters:
+  dict_magnitude_eff: 0.90
+  dict_magnitude_prev: null
+  return_prevalence_dict: false
+  vec_implementation_ramp:
+    tp_0_ramp: 10
+    n_tp_ramp: 35
+    alpha_logistic: 0.6
+    window_logistic: [-8, 8]
+transformer: "TFR:PFLO:INC_IND_CCS"

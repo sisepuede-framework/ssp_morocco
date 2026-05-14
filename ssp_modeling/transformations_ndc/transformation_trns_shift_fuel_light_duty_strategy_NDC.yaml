@@ -1,0 +1,19 @@
+citations:
+  - 'SNBC Ch.7.5 p.76-78, Table 16 -- 100% EV sales by 2040 (motorcycles by 2030)'
+description: >-
+  SNBC Net Zero: Near-complete electrification of light-duty vehicles by 2040.
+  95% shift allows 5% residual. Steep sigmoid for classic EV adoption S-curve.
+identifiers:
+  transformation_code: "TX:TRNS:SHIFT_FUEL_LIGHT_DUTY_STRATEGY_NDC"
+  transformation_name: "SNBC NDC - TRNS: Electrify light duty transport by 2040"
+parameters:
+  categories:
+  - road_light
+  dict_fuel_allocation: null
+  magnitude: 0.95
+  vec_implementation_ramp:
+    tp_0_ramp: 7
+    n_tp_ramp: 18
+    alpha_logistic: 0.8
+    window_logistic: [-8, 8]
+transformer: "TFR:TRNS:SHIFT_FUEL_LIGHT_DUTY"

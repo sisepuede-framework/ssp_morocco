@@ -1,0 +1,22 @@
+citations:
+  - 'SNBC Ch.7.5 p.78, Table 16 -- Maritime hydrogen shift'
+description: >-
+  SNBC Net Zero: 50% maritime fuel shift to hydrogen/ammonia. Hard-to-abate
+  sector with later start.
+identifiers:
+  transformation_code: "TX:TRNS:SHIFT_FUEL_MARITIME_STRATEGY_NDC"
+  transformation_name: "SNBC NDC - TRNS: 50% maritime fuel shift by 2050"
+parameters:
+  categories:
+  - water_borne
+  dict_allocation_fuels_target: null
+  fuels_source:
+  - fuel_diesel
+  - fuel_gasoline
+  magnitude: 0.50
+  vec_implementation_ramp:
+    tp_0_ramp: 15
+    n_tp_ramp: 20
+    alpha_logistic: 0.5
+    window_logistic: [-8, 8]
+transformer: "TFR:TRNS:SHIFT_FUEL_MARITIME"

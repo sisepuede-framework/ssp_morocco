@@ -1,0 +1,18 @@
+citations:
+  - "SNBC Ch.7.9 p.82 -- Cross-sector dietary shifts (implied, LOW confidence)"
+description: >-
+  SNBC Net Zero: Cross-sector dietary shifts with 20% reduction in
+  red meat consumption by 2050. Linear ramp reflecting gradual
+  behavioral change. LOW confidence -- implied from cross-sector
+  analysis, not an explicit SNBC target.
+identifiers:
+  transformation_code: "TX:PFLO:INC_HEALTHIER_DIETS_STRATEGY_NDC"
+  transformation_name: "SNBC NDC - PFLO: Dietary shifts (low confidence)"
+parameters:
+  magnitude_red_meat: 0.20
+  vec_implementation_ramp:
+    tp_0_ramp: 10
+    n_tp_ramp: 25
+    alpha_logistic: 0.0
+    window_logistic: [-8, 8]
+transformer: "TFR:PFLO:INC_HEALTHIER_DIETS"

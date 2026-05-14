@@ -1,0 +1,16 @@
+citations:
+  - "SNBC Ch.7.6 p.79, Table 17 -- 320K ha organic farming, precision agriculture"
+description: >-
+  SNBC Net Zero: Reduce nitrogen fertilizer application by 20% through
+  320,000 ha organic farming expansion and precision agriculture techniques.
+identifiers:
+  transformation_code: "TX:SOIL:DEC_N_APPLIED_STRATEGY_NDC"
+  transformation_name: "SNBC NDC - SOIL: 20% nitrogen reduction"
+parameters:
+  magnitude: 0.20
+  vec_implementation_ramp:
+    tp_0_ramp: 10
+    n_tp_ramp: 25
+    alpha_logistic: 0.0
+    window_logistic: [-8, 8]
+transformer: "TFR:SOIL:DEC_N_APPLIED"
