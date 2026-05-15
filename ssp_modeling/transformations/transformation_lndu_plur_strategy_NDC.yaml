@@ -1,0 +1,17 @@
+citations:
+  - "Required enabler for LNDU transformations (config default is zero)"
+description: >-
+  Enable land use reallocation factor. Required for reforestation and land
+  transitions to take effect. Quick linear ramp to activate early.
+identifiers:
+  transformation_code: "TX:LNDU:PLUR_STRATEGY_NDC"
+  transformation_name: "SNBC NDC - LNDU: Enable land use reallocation"
+parameters:
+  force: false
+  magnitude: 0.25
+  vec_implementation_ramp:
+    tp_0_ramp: 7
+    n_tp_ramp: 8
+    alpha_logistic: 0.0
+    window_logistic: [-8, 8]
+transformer: "TFR:LNDU:PLUR"

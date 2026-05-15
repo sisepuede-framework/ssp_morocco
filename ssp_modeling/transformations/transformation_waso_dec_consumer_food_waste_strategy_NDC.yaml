@@ -1,0 +1,16 @@
+citations:
+  - "SNBC Ch.7.8, Table 19 -- 30% consumer food waste reduction"
+description: >-
+  SNBC Net Zero: Reduce consumer food waste per capita by 30% by 2050.
+  Linear ramp reflecting gradual behavioral change and awareness campaigns.
+identifiers:
+  transformation_code: "TX:WASO:DEC_CONSUMER_FOOD_WASTE_STRATEGY_NDC"
+  transformation_name: "SNBC NDC - WASO: 30% food waste reduction"
+parameters:
+  magnitude: 0.30
+  vec_implementation_ramp:
+    tp_0_ramp: 10
+    n_tp_ramp: 25
+    alpha_logistic: 0.0
+    window_logistic: [-8, 8]
+transformer: "TFR:WASO:DEC_CONSUMER_FOOD_WASTE"

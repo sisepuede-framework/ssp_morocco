@@ -1,0 +1,16 @@
+citations:
+  - "SNBC Ch.7.6 p.79, Table 17 -- 10% livestock carrying capacity improvement"
+description: >-
+  SNBC Net Zero: Increase livestock carrying capacity by 10% through improved
+  animal husbandry and feed efficiency.
+identifiers:
+  transformation_code: "TX:LVST:INC_PRODUCTIVITY_STRATEGY_NDC"
+  transformation_name: "SNBC NDC - LVST: 10% livestock productivity improvement"
+parameters:
+  magnitude: 0.10
+  vec_implementation_ramp:
+    tp_0_ramp: 10
+    n_tp_ramp: 25
+    alpha_logistic: 0.0
+    window_logistic: [-8, 8]
+transformer: "TFR:LVST:INC_PRODUCTIVITY"

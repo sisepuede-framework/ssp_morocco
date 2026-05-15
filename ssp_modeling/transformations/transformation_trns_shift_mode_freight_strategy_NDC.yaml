@@ -1,0 +1,19 @@
+citations:
+  - 'SNBC Ch.7.5 p.77, Table 16 -- Morocco Rail Plan 2040, road-to-rail freight'
+description: >-
+  SNBC Net Zero: 25% of road freight shifted to rail by 2040. Morocco Rail Plan
+  2040 infrastructure.
+identifiers:
+  transformation_code: "TX:TRNS:SHIFT_MODE_FREIGHT_STRATEGY_NDC"
+  transformation_name: "SNBC NDC - TRNS: 25% road-to-rail freight shift by 2040"
+parameters:
+  categories_out:
+  - road_heavy_freight
+  dict_categories_target: null
+  magnitude: 0.25
+  vec_implementation_ramp:
+    tp_0_ramp: 10
+    n_tp_ramp: 15
+    alpha_logistic: 0.5
+    window_logistic: [-8, 8]
+transformer: "TFR:TRNS:SHIFT_MODE_FREIGHT"

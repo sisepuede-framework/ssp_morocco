@@ -1,0 +1,17 @@
+citations:
+  - "SNBC Ch.7.4, Table 15 -- Other fluorinated compound reduction"
+description: >-
+  SNBC Net Zero: Reduce other fluorinated compounds (SF6, NF3, HCFCs,
+  etc.) to 50% of baseline by 2050. Linear ramp reflecting gradual
+  industrial substitution and leak reduction.
+identifiers:
+  transformation_code: "TX:IPPU:DEC_OTHER_FCS_STRATEGY_NDC"
+  transformation_name: "SNBC NDC - IPPU: 50% other FC reduction"
+parameters:
+  magnitude: 0.50
+  vec_implementation_ramp:
+    tp_0_ramp: 10
+    n_tp_ramp: 25
+    alpha_logistic: 0.0
+    window_logistic: [-8, 8]
+transformer: "TFR:IPPU:DEC_OTHER_FCS"

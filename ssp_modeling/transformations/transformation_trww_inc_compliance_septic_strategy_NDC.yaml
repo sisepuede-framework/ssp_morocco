@@ -1,0 +1,17 @@
+citations:
+  - "SNBC Ch.7.8, Table 19 -- 85% septic compliance"
+description: >-
+  SNBC Net Zero: Increase septic system compliance to 85% by 2050.
+  Linear ramp reflecting steady regulatory enforcement and rural
+  sanitation improvements.
+identifiers:
+  transformation_code: "TX:TRWW:INC_COMPLIANCE_SEPTIC_STRATEGY_NDC"
+  transformation_name: "SNBC NDC - TRWW: 85% septic compliance"
+parameters:
+  magnitude: 0.85
+  vec_implementation_ramp:
+    tp_0_ramp: 10
+    n_tp_ramp: 25
+    alpha_logistic: 0.0
+    window_logistic: [-8, 8]
+transformer: "TFR:TRWW:INC_COMPLIANCE_SEPTIC"

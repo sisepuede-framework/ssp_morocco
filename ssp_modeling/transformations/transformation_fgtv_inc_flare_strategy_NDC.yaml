@@ -1,0 +1,16 @@
+citations:
+  - 'SNBC Ch.7.2 p.70, Table 12 -- Maximize flaring of vented gas'
+description: >-
+  SNBC Net Zero: 80% flaring rate for vented gas. Converts CH4 to CO2 (lower
+  GWP).
+identifiers:
+  transformation_code: "TX:FGTV:INC_FLARE_STRATEGY_NDC"
+  transformation_name: "SNBC Net Zero - FGTV: Maximize flaring to 80%"
+parameters:
+  magnitude: 0.8
+  vec_implementation_ramp:
+    tp_0_ramp: 10
+    n_tp_ramp: 25
+    alpha_logistic: 0.0
+    window_logistic: [-8, 8]
+transformer: "TFR:FGTV:INC_FLARE"

@@ -1,0 +1,18 @@
+citations:
+  - 'SNBC Ch.7.2 p.70, Table 12 -- Grid modernization and loss reduction'
+description: >-
+  SNBC Net Zero: Reduce T&D losses to 4% (from ~12-14%). Linear ramp for steady
+  grid improvement.
+identifiers:
+  transformation_code: "TX:ENTC:DEC_LOSSES_STRATEGY_NDC"
+  transformation_name: "SNBC Net Zero - ENTC: Reduce transmission losses to 4%"
+parameters:
+  magnitude: 0.04
+  magnitude_type: final_value
+  min_loss: 0.02
+  vec_implementation_ramp:
+    tp_0_ramp: 7
+    n_tp_ramp: 28
+    alpha_logistic: 0.0
+    window_logistic: [-8, 8]
+transformer: "TFR:ENTC:DEC_LOSSES"

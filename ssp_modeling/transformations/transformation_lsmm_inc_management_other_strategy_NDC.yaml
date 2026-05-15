@@ -1,0 +1,18 @@
+citations:
+  - "SNBC Ch.7.6 p.79, Table 17 -- Improved other livestock manure management"
+description: >-
+  SNBC Net Zero: Improve manure management for other livestock using default
+  treatment pathways (composting, dry lot, daily spread, solid storage).
+identifiers:
+  transformation_code: "TX:LSMM:INC_MANAGEMENT_OTHER_STRATEGY_NDC"
+  transformation_name: "SNBC NDC - LSMM: Improved other livestock manure management"
+parameters:
+  dict_lsmm_pathways: null
+  return_pathways: false
+  vec_cats_lvst: null
+  vec_implementation_ramp:
+    tp_0_ramp: 10
+    n_tp_ramp: 25
+    alpha_logistic: 0.0
+    window_logistic: [-8, 8]
+transformer: "TFR:LSMM:INC_MANAGEMENT_OTHER"

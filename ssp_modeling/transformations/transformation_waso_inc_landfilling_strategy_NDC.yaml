@@ -1,0 +1,17 @@
+citations:
+  - "SNBC Ch.7.8, Table 19 -- 95% sanitary landfilling"
+description: >-
+  SNBC Net Zero: Increase fraction of untreated waste sent to sanitary
+  landfills to 95% by 2050. Linear ramp reflecting steady infrastructure
+  improvement across the country.
+identifiers:
+  transformation_code: "TX:WASO:INC_LANDFILLING_STRATEGY_NDC"
+  transformation_name: "SNBC NDC - WASO: 95% sanitary landfilling"
+parameters:
+  magnitude: 0.95
+  vec_implementation_ramp:
+    tp_0_ramp: 10
+    n_tp_ramp: 25
+    alpha_logistic: 0.0
+    window_logistic: [-8, 8]
+transformer: "TFR:WASO:INC_LANDFILLING"

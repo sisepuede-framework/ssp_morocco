@@ -1,0 +1,16 @@
+citations:
+  - "SNBC Ch.7.8 p.81, Table 19 -- 49% recycling rate by 2050"
+description: >-
+  SNBC Net Zero: Increase solid waste recycling rate to 49% by 2050.
+  Mild sigmoid ramp reflecting gradual infrastructure buildout.
+identifiers:
+  transformation_code: "TX:WASO:INC_RECYCLING_STRATEGY_NDC"
+  transformation_name: "SNBC NDC - WASO: Increase recycling to 49%"
+parameters:
+  magnitude: 0.49
+  vec_implementation_ramp:
+    tp_0_ramp: 10
+    n_tp_ramp: 25
+    alpha_logistic: 0.4
+    window_logistic: [-8, 8]
+transformer: "TFR:WASO:INC_RECYCLING"

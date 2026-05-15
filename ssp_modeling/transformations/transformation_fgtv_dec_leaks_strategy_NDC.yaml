@@ -1,0 +1,17 @@
+citations:
+  - 'SNBC Ch.7.2 p.70, Table 12 -- Fugitive emission leak detection and reduction'
+description: >-
+  SNBC Net Zero: 80% reduction in fugitive emission leaks through detection
+  programs.
+identifiers:
+  transformation_code: "TX:FGTV:DEC_LEAKS_STRATEGY_NDC"
+  transformation_name: "SNBC Net Zero - FGTV: Reduce fugitive emission leaks by 80%"
+parameters:
+  magnitude: 0.8
+  magnitude_type: baseline_scalar
+  vec_implementation_ramp:
+    tp_0_ramp: 10
+    n_tp_ramp: 25
+    alpha_logistic: 0.0
+    window_logistic: [-8, 8]
+transformer: "TFR:FGTV:DEC_LEAKS"

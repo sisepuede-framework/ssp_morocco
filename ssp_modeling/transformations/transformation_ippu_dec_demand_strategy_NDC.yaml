@@ -1,0 +1,17 @@
+citations:
+  - "SNBC Ch.7.4, Ch.7.8 -- Demand reduction from recycling + material efficiency"
+description: >-
+  SNBC Net Zero: Reduce industrial product demand by 15% by 2050
+  through recycling, material efficiency, and circular economy measures.
+  Linear ramp reflecting gradual demand-side transformation.
+identifiers:
+  transformation_code: "TX:IPPU:DEC_DEMAND_STRATEGY_NDC"
+  transformation_name: "SNBC NDC - IPPU: 15% demand reduction"
+parameters:
+  magnitude: 0.85
+  vec_implementation_ramp:
+    tp_0_ramp: 10
+    n_tp_ramp: 25
+    alpha_logistic: 0.0
+    window_logistic: [-8, 8]
+transformer: "TFR:IPPU:DEC_DEMAND"
