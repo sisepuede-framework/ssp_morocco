@@ -1,4 +1,4 @@
-name: ssp_morocco
+name: ssp_morocco_env
 channels:
   - conda-forge
 dependencies:
@@ -12,7 +12,7 @@ dependencies:
   - setuptools>=60,<70 # otherwise install it directly on the terminal /opt/anaconda3/envs/ssp_libya_env_2/bin/python -m pip install "setuptools>=60,<70"
   - pip:
       # SISEPUEDE — fork mantenido en sisepuede-framework (no se sincroniza con jcsyme/sisepuede).
-      - git+https://github.com/sisepuede-framework/sisepuede.git
+      - git+https://github.com/jcsyme/sisepuede/
       - ssp-transformations-handler
       # Costs & Benefits (fork con GFR cost + `gas_recovery_savings`).
       - git+https://github.com/sisepuede-framework/costs_benefits_ssp.git

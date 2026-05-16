@@ -1,7 +1,7 @@
 citations: null
 description: Decrease transmission losses by upgrading electrical transmission infrastructure.
 identifiers:
-  transformation_code: "TX:ENTC:DEC_LOSSES_STRATEGY_NDC"
+  transformation_code: "TX:ENTC:DEC_LOSSES_STRATEGY_LEDS"
   transformation_name: "Scaled Default Max Parameters by 1.0 - ENTC: Reduce transmission\
     \ losses"
 parameters:
