@@ -1,19 +1,23 @@
-citations: null
+citations:
 description: Missing
 identifiers:
   transformation_code: "TX:TRNS:SHIFT_FUEL_MEDIUM_DUTY_STRATEGY_LEDS"
-  transformation_name: "Scaled Default Max Parameters by 1.0 - TRNS: Fuel switch medium\
-    \ duty road transport"
+  transformation_name: "Scaled Default Max Parameters by 0.8 - TRNS: Fuel switch medium
+    duty road transport"
 parameters:
   categories:
   - road_heavy_freight
   - road_heavy_regional
-  - public
-  dict_allocation_fuels_target: null
+  dict_allocation_fuels_target:
   fuels_source:
   - fuel_diesel
   - fuel_gasoline
-  magnitude: 0.7
+  magnitude: 0.5599999999999999
   vec_implementation_ramp:
-    tp_0_ramp: 12
+    tp_0_ramp: 7
+    n_tp_ramp: 25
+    alpha_logistic: 0.7
+    window_logistic:
+    - -2
+    - 8
 transformer: "TFR:TRNS:SHIFT_FUEL_MEDIUM_DUTY"
