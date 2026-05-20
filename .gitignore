@@ -193,6 +193,12 @@ ndc exploration/
 # Calibration working files (backups not tracked)
 ssp_modeling/input_data/df_input_0.csv.bak*
 
+# Generic backup files (timestamped backups created by the notebooks)
+*.csv.bak
+*.csv.bak_*
+*.bak
+*.bak_*
+
 # Claude Code internals
 .claude/
 CLAUDE.md

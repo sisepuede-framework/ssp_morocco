@@ -8,18 +8,15 @@ parameters:
   categories:
   - road_heavy_freight
   - road_heavy_regional
-  dict_allocation_fuels_target:
-    fuel_electricity: 0.5
-    fuel_hydrogen: 0.5
-  fuels_source:
-  - fuel_diesel
-  - fuel_gasoline
-  magnitude: 0.5
+  magnitude: 0.78
   vec_implementation_ramp:
-    tp_0_ramp: 10
-    n_tp_ramp: 20
-    alpha_logistic: 0.8
+    tp_0_ramp: 13
+    n_tp_ramp: 12
+    alpha_logistic: 0.0
     window_logistic:
     - -8
     - 8
-transformer: "TFR:TRNS:SHIFT_FUEL_MEDIUM_DUTY"
+  dict_fuel_allocation:
+    fuel_electricity: 0.1
+    fuel_hydrogen: 0.9
+transformer: "TFR:TRNS:SHIFT_FUEL_LIGHT_DUTY"
