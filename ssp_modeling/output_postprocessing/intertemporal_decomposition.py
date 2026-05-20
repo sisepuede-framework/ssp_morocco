@@ -149,11 +149,26 @@ def preprocess_ssp_output(
     for var in vars_to_patch:
         if var not in data_all.columns:
             continue
-        zero_mask = mask_ref & (data_all[var] == 0)
-        changed = zero_mask.sum()
-        if changed > 0:
-            data_all.loc[zero_mask, var] = 0.01
-            print(f"Changed {changed} zero(s) in: {var} (time_period == {time_period_ref})")
+        zero_mask_ref = mask_ref & (data_all[var] == 0)
+        if zero_mask_ref.sum() == 0:
+            continue
+        # Extend the patch to all years where var == 0 for the affected scenarios.
+        # Patching only at time_period_ref causes the rescaler's cumprod branch to
+        # see pct_diff[ref->ref+1] = (0 - 0.01)/0.01 = -100%, collapsing the
+        # rescaled projection to 0 from year ref+1 onward.
+        affected_pids = data_all.loc[zero_mask_ref, "primary_id"].unique()
+        patch_mask = (
+            data_all["primary_id"].isin(affected_pids)
+            & (data_all[var] == 0)
+        )
+        n_patched = int(patch_mask.sum())
+        if data_all[var].dtype != float:
+            data_all[var] = data_all[var].astype(float)
+        data_all.loc[patch_mask, var] = 0.01
+        print(
+            f"Changed {n_patched} zero(s) in: {var} "
+            f"(across all years for primary_ids {list(affected_pids)})"
+        )
 
     te_all = te_all.copy()
     te_all["simulation"] = 0.0
