@@ -1234,3 +1234,59 @@ Total per-cell misses dropped from initial 15 (with several at 100-300% gap) to 
 - `ssp_modeling/input_data/sisepuede_raw_inputmorocco_fuels.csv` (when notebook runs end-to-end with populated overrides)
 - Notebook prints before/after diagnostic tables for visual comparison
 - 75 frac column writes per (subcat, fuel) override, applied at tp 7 (2022) through tp 35 (2050) with hold strategy
+
+---
+
+## Session 2026-05-21 (cont.): INEN energy demand calibrated to IEA
+
+### Objective
+Calibrate industrial (INEN) energy demand — total AND fuel mix — against IEA "Industry Total Final Consumption by source" for Morocco.
+
+### Data source added
+- `ssp_modeling/input_data/reference/iea_morocco_industry_tfc_by_source.csv` — IEA industry TFC by source (Coal/Oil/Natural gas/Electricity/Biofuels & waste), 2000-2023, in TJ.
+
+IEA Morocco industry 2022 (PJ): Coal 0.65 / Oil products 72.16 / Natural gas 2.40 / Electricity 47.23 / Biofuels & waste 4.31. Total = 126.74 PJ.
+
+### Notebook
+`recalibrate_non_elec_fuels_demand.ipynb` rewritten (19 cells) as the IEA-anchored INEN calibration:
+- **Stage 0** — scales every `consumpinit_inen_energy_*` column by a single cumulative factor so model INEN total = IEA total. Iterates to <1% tolerance.
+- **Stage A** — diagnostic: model INEN by IEA fuel group vs IEA.
+- **Stage B** — sets the IEA national-average fuel mix on all 21 INEN industries; SCOE keeps `SCOE_OVERRIDES`.
+- **Validation** — re-runs the model, confirms each IEA group within tolerance.
+
+### Key fix: useful-energy vs final-energy
+
+`frac_inen_energy_<industry>_<fuel>` is a **useful-energy** share. The model computes `fuel_demand_f = useful_total x frac_f / efficfactor_f`. IEA reports **final energy** (= fuel demand). So to hit an IEA final-energy share T_f, the fraction must be:
+
+```
+frac_f = (T_f x efficfactor_f) / sum_g(T_g x efficfactor_g)
+```
+
+INEN efficfactor values (frozen-tech base): electricity 2.40, natural_gas 0.80, furnace_gas 0.80, hydrogen 0.80, solar 0.95, coal/coke/biomass 0.60, oil/diesel/gasoline/kerosene/LPG 0.75.
+
+Because electricity is efficient (2.40), to deliver 37.3% of final energy it needs a 67.2% useful-energy fraction. First attempt (setting frac = IEA share directly) gave electricity only 18 PJ vs 47 target; after the efficiency correction the validation matched IEA to <0.1%.
+
+### Mapping decisions
+- `coke` is treated as **petroleum coke** -> IEA "Oil and oil products" group (Moroccan cement kilns burn petcoke, not coal).
+- IEA "Oil and oil products" group is split across SISEPUEDE oil/coke/diesel/kerosene/gasoline/LPG via `OIL_GROUP_SUBSPLIT` (coke 0.35, oil 0.42, diesel 0.18, kerosene 0.02, gasoline 0.02, LPG 0.01) - IEA gives no within-group breakdown.
+- The IEA national-average mix is applied to **every** INEN industry (IEA has no per-industry breakdown). Guarantees the INEN aggregate matches IEA; sacrifices per-industry realism (e.g. cement carries the national mix).
+
+### Result (2022)
+| IEA group | model | IEA | status |
+|---|---:|---:|---|
+| Coal & coal products | 0.65 | 0.65 | OK |
+| Oil and oil products | 72.16 | 72.16 | OK |
+| Natural gas | 2.40 | 2.40 | OK |
+| Electricity | 47.22 | 47.23 | OK |
+| Biofuels & waste | 4.31 | 4.31 | OK |
+| TOTAL | 126.74 | 126.74 | OK |
+
+Cumulative `consumpinit_inen` scaling factor brought the model INEN total from ~182 PJ down to 126.74 PJ.
+
+### Output
+- `sisepuede_raw_input_morocco_fuels.csv` (in-place; backup `.bak_preIEA_*` created before run).
+
+### Limitations
+- SCOE not covered by IEA data here — still uses `SCOE_OVERRIDES` best estimates.
+- Per-industry INEN mix is uniform (national average) — no per-industry IEA data.
+- Calibrated to 2022; held flat to 2050 via the override window.

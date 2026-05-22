@@ -456,7 +456,7 @@ def run_tableau_postprocessing(
     wide_inputs_outputs_filename: str | None = None,
     out_dir: str | Path | None = None,
     hp_cutoff_year: int | None = 2025,
-    drivers_taxonomy_filename: str = "driver_variables_taxonomy_20240117.csv",
+    drivers_taxonomy_filename: str = "driver_variables_taxonomy_20251013.csv",
     levers_filename: str | None = None,
 ) -> dict:
     """Generate every Tableau-ready CSV in one call (Morocco-adapted).
