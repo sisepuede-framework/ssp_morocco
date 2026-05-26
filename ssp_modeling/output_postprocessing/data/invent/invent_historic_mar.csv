@@ -11,6 +11,8 @@
 1 - Energy,1.A.4 - Other Sectors,1.A.4 - Other Sectors,1.A.4 - Other Sectors:CH4,CH4,0.449725,0.4192,0.404525,0.400925,0.3882,MAR
 1 - Energy,1.A.4 - Other Sectors,1.A.4 - Other Sectors,1.A.4 - Other Sectors:CO2,CO2,7.365,8.206,8.797,9.48963,10.06162,MAR
 1 - Energy,1.A.4 - Other Sectors,1.A.4 - Other Sectors,1.A.4 - Other Sectors:N2O,N2O,0.276544,0.293828,0.30843,0.33078,0.350448,MAR
+1 - Energy,1.B - Fugitive emissions from fuels,1.B - Fugitive emissions from fuels,1.B - Fugitive emissions from fuels:CH4,CH4,0.178875,0.1980475,0.208575,0.190225,0.198825,MAR
+1 - Energy,1.B - Fugitive emissions from fuels,1.B - Fugitive emissions from fuels,1.B - Fugitive emissions from fuels:CO2,CO2,0.0006645,0.0005244,0.0004495,0.00042,0.000423,MAR
 2 - Industrial Processes and Product Use,2.A.1 - Cement production,2.A.1 - Cement production,2.A.1 - Cement production:CO2,CO2,5.35923,5.83751,5.17137,5.20489,4.89185,MAR
 2 - Industrial Processes and Product Use,2.A.2 - Lime production,2.A.2 - Lime production,2.A.2 - Lime production:CO2,CO2,0.0615,0.0615,0.0645,0.07315,0.07657,MAR
 2 - Industrial Processes and Product Use,2.A.3 - Glass production,2.A.3 - Glass production,2.A.3 - Glass production:CO2,CO2,0.0185,0.02113,0.02173,0.02234,0.02297,MAR
@@ -18,7 +20,7 @@
 2 - Industrial Processes and Product Use,2.F.1 - Refrigeration and Air Conditioning,2.F.1 - Refrigeration and Air Conditioning,2.F.1 - Refrigeration and Air Conditioning:HFCS,HFCS,0.00914,0.02139,0.03761,0.06306,0.10575,MAR
 "3 - Agriculture, Forestry, and Other Land Use",3.A.1 - Enteric Fermentation,3.A.1 - Enteric Fermentation,3.A.1 - Enteric Fermentation:CH4,CH4,7.0409,7.53923,7.60808,7.96486,8.2112,MAR
 "3 - Agriculture, Forestry, and Other Land Use",3.A.2 - Manure Management,3.A.2 - Manure Management,3.A.2 - Manure Management:CH4,CH4,0.94596,1.00477,1.03957,1.07969,1.13182048282825,MAR
-"3 - Agriculture, Forestry, and Other Land Use",3.B.1 - Forest land,3.B.1 - Forest land,3.B.1 - Forest land:CO2,CO2,-2.4456,-2.2966,-2.5001,-2.1972,-2.4834,MAR
+"3 - Agriculture, Forestry, and Other Land Use",3.B.1 - Forest land,3.B.1 - Forest land,3.B.1 - Forest land:CO2,CO2,-2.4456,-2.93472,-3.521664,-4.2259968,-5.07119616,MAR
 "3 - Agriculture, Forestry, and Other Land Use",3.B.2 - Cropland,3.B.2 - Cropland,3.B.2 - Cropland:CO2,CO2,-0.3636,-0.4979,-0.3033,-0.2528,-0.3742,MAR
 "3 - Agriculture, Forestry, and Other Land Use",3.B.3 - Grassland,3.B.3 - Grassland,3.B.3 - Grassland:CO2,CO2,0.2824,0.3784,0.3316,0.3149,0.302,MAR
 "3 - Agriculture, Forestry, and Other Land Use",3.B.4 - Wetlands,3.B.4 - Wetlands,3.B.4 - Wetlands:CO2,CO2,-0.1287,-0.1354,-0.1401,-0.1437,-0.1464,MAR

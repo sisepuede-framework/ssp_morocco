@@ -2,7 +2,7 @@ citations: null
 description: Missing
 identifiers:
   transformation_code: "TX:TRNS:INC_EFFICIENCY_ELECTRIC_STRATEGY_NDC"
-  transformation_name: "Scaled Default Max Parameters by 1 - TRNS: Increase electric\
+  transformation_name: "Scaled Default Max Parameters by 1.0 - TRNS: Increase electric\
     \ transportation energy efficiency"
 parameters:
   magnitude: 0.25

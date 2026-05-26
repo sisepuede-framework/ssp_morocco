@@ -7,7 +7,7 @@ identifiers:
 parameters:
   categories:
   - public
-  magnitude: 0.2
+  magnitude: 0.6
   vec_implementation_ramp:
     tp_0_ramp: 10
     n_tp_ramp: 22

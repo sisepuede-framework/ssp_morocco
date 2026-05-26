@@ -2,7 +2,7 @@ citations: null
 description: Missing
 identifiers:
   transformation_code: "TX:TRWW:INC_COMPLIANCE_SEPTIC_STRATEGY_NDC"
-  transformation_name: "Scaled Default Max Parameters by 1 - TRWW: Increase septic\
+  transformation_name: "Scaled Default Max Parameters by 1.0 - TRWW: Increase septic\
     \ compliance"
 parameters:
   magnitude: 0.9

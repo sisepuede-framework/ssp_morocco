@@ -2,7 +2,8 @@ citations: null
 description: Missing
 identifiers:
   transformation_code: "TX:IPPU:DEC_HFCS_STRATEGY_NDC"
-  transformation_name: "Scaled Default Max Parameters by 1 - IPPU: Reduce use of HFCs"
+  transformation_name: "Scaled Default Max Parameters by 1.0 - IPPU: Reduce use of\
+    \ HFCs"
 parameters:
   magnitude: 0.1
   vec_implementation_ramp:

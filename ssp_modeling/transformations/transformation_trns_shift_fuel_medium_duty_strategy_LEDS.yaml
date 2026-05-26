@@ -8,7 +8,7 @@ parameters:
   categories:
   - road_heavy_freight
   - road_heavy_regional
-  magnitude: 0.78
+  magnitude: 0.9
   vec_implementation_ramp:
     tp_0_ramp: 13
     n_tp_ramp: 12

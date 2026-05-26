@@ -2,7 +2,7 @@ citations: null
 description: Missing
 identifiers:
   transformation_code: "TX:TRNS:SHIFT_FUEL_MARITIME_STRATEGY_NDC"
-  transformation_name: "Scaled Default Max Parameters by 1 - TRNS: Fuel switch maritime"
+  transformation_name: "Scaled Default Max Parameters by 1.0 - TRNS: Fuel switch maritime"
 parameters:
   categories:
   - water_borne

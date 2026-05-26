@@ -7,5 +7,5 @@ identifiers:
 parameters:
   magnitude: 0.25
   vec_implementation_ramp:
-    tp_0_ramp: 12
+    tp_0_ramp: 10
 transformer: "TFR:TRNS:INC_EFFICIENCY_NON_ELECTRIC"

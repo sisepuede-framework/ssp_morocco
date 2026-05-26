@@ -2,7 +2,7 @@ citations: null
 description: Missing
 identifiers:
   transformation_code: "TX:IPPU:DEC_N2O_STRATEGY_NDC"
-  transformation_name: "Scaled Default Max Parameters by 1 - IPPU: Reduce Nitrous\
+  transformation_name: "Scaled Default Max Parameters by 1.0 - IPPU: Reduce Nitrous\
     \ Oxide emissions"
 parameters:
   magnitude: 0.1

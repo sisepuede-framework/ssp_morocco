@@ -12,5 +12,5 @@ parameters:
   - fuel_gasoline
   magnitude: 0.7
   vec_implementation_ramp:
-    tp_0_ramp: 12
+    tp_0_ramp: 10
 transformer: "TFR:TRNS:SHIFT_FUEL_MARITIME"

@@ -10,5 +10,5 @@ parameters:
   dict_categories_target: null
   magnitude: 0.3
   vec_implementation_ramp:
-    tp_0_ramp: 12
+    tp_0_ramp: 10
 transformer: "TFR:TRNS:SHIFT_MODE_PASSENGER"

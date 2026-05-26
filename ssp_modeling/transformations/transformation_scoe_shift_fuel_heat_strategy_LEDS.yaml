@@ -10,7 +10,7 @@ parameters:
   - fuel_hydrocarbon_gas_liquids
   - fuel_biomass
   cats_scoe_apply:
-  magnitude: 0.95
+  magnitude: 0.99
   vec_implementation_ramp:
     tp_0_ramp: 10
     n_tp_ramp: 25
