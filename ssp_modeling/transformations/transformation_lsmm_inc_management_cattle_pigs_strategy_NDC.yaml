@@ -1,19 +1,16 @@
-citations:
-  - "SNBC Ch.7.6 p.79, Table 17 -- Improved cattle/pig manure management"
-description: >-
-  SNBC Net Zero: Improve manure management for cattle and pigs using default
-  treatment pathways (anaerobic digestion, composting, daily spread, deep
-  bedding, solid storage).
+citations: null
+description: " | 95% of manure from cattle (dairy and non-dairy) and pigs is treated.\
+  \ Under default conditions, the manure treated is sent to the following pathways:\n\
+  \ |    37.5% to Anaerobic Digestion\n |    12.5% to Composting\n |    25.0% to Daily\
+  \ Spread\n |    12.5% to Deep Bedding\n |    12.5% to Solid Storage"
 identifiers:
   transformation_code: "TX:LSMM:INC_MANAGEMENT_CATTLE_PIGS_STRATEGY_NDC"
-  transformation_name: "SNBC NDC - LSMM: Improved cattle/pig manure management"
+  transformation_name: "Scaled Default Max Parameters by 1 - LSMM: Improve manure\
+    \ management for cattle and pigs"
 parameters:
   dict_lsmm_pathways: null
   return_pathways: false
   vec_cats_lvst: null
   vec_implementation_ramp:
     tp_0_ramp: 10
-    n_tp_ramp: 25
-    alpha_logistic: 0.0
-    window_logistic: [-8, 8]
 transformer: "TFR:LSMM:INC_MANAGEMENT_CATTLE_PIGS"

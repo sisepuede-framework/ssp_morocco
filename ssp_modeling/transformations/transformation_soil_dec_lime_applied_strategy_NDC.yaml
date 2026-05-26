@@ -1,16 +1,10 @@
-citations:
-  - "SNBC Ch.7.6 p.79, Table 17 -- Reduce lime application"
-description: >-
-  SNBC Net Zero: Reduce lime application to soils by 15% through improved
-  soil management practices.
+citations: null
+description: Decrease lime applied to soils (default 5%)
 identifiers:
   transformation_code: "TX:SOIL:DEC_LIME_APPLIED_STRATEGY_NDC"
-  transformation_name: "SNBC NDC - SOIL: 15% lime reduction"
+  transformation_name: "Scaled Default Max Parameters by 1 - SOIL: Improve lime application"
 parameters:
-  magnitude: 0.15
+  magnitude: 0.2
   vec_implementation_ramp:
     tp_0_ramp: 10
-    n_tp_ramp: 25
-    alpha_logistic: 0.0
-    window_logistic: [-8, 8]
 transformer: "TFR:SOIL:DEC_LIME_APPLIED"

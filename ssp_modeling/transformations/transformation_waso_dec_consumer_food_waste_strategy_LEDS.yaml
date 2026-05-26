@@ -7,5 +7,5 @@ identifiers:
 parameters:
   magnitude: 0.3
   vec_implementation_ramp:
-    tp_0_ramp: 12
+    tp_0_ramp: 10
 transformer: "TFR:WASO:DEC_CONSUMER_FOOD_WASTE"

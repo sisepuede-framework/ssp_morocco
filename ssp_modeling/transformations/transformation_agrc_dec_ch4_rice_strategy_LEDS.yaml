@@ -8,5 +8,5 @@ identifiers:
 parameters:
   magnitude: 0.45
   vec_implementation_ramp:
-    tp_0_ramp: 12
+    tp_0_ramp: 10
 transformer: "TFR:AGRC:DEC_CH4_RICE"

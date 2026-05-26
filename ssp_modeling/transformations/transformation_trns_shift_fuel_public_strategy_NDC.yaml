@@ -1,13 +1,11 @@
 citations: null
 description: Missing
 identifiers:
-  transformation_code: "TX:TRNS:SHIFT_FUEL_MEDIUM_DUTY_STRATEGY_NDC"
-  transformation_name: "Scaled Default Max Parameters by 1 - TRNS: Fuel switch medium\
-    \ duty road transport"
+  transformation_code: "TX:TRNS:SHIFT_FUEL_PUBLIC_STRATEGY_NDC"
+  transformation_name: "Scaled Default Max Parameters by 1 - TRNS: Electrify urban\
+    \ public transport"
 parameters:
   categories:
-  - road_heavy_freight
-  - road_heavy_regional
   - public
   dict_allocation_fuels_target: null
   fuels_source:

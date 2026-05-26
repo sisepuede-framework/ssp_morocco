@@ -116,9 +116,11 @@ HP_SCHEDULE = [
     ("1.A.4 - Other Sectors",                              ["CO2"], 200),
     ("2.A.1 - Cement production",                          ["CO2"], 400),
     ("2.F.1 - Refrigeration and Air Conditioning",         ["HFCS"], 200),
+    
     ("3.A.1 - Enteric Fermentation",                       ["CH4"], 200),
     ("3.A.2 - Manure Management",                          ["CH4"], 200),
     ("3.C.4 - Direct N2O Emissions from managed soils",    ["N2O"], 200),
+    
     ("4.A.1 - Managed Waste Disposal Sites",               ["CH4"], 400),
     ("4.A.2 - Unmanaged Waste Disposal Sites",             ["CH4"], 400),
     ("4.D.1 - Domestic Wastewater",                        ["CH4"], 400),

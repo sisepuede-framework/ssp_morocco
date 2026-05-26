@@ -7,5 +7,5 @@ identifiers:
 parameters:
   magnitude: 0.15
   vec_implementation_ramp:
-    tp_0_ramp: 12
+    tp_0_ramp: 10
 transformer: "TFR:INEN:INC_EFFICIENCY_ENERGY"

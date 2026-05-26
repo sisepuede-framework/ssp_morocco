@@ -7,5 +7,5 @@ identifiers:
 parameters:
   magnitude_red_meat: 0.5
   vec_implementation_ramp:
-    tp_0_ramp: 12
+    tp_0_ramp: 10
 transformer: "TFR:PFLO:INC_HEALTHIER_DIETS"

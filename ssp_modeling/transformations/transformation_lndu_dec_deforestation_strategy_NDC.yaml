@@ -1,17 +1,10 @@
-citations:
-  - "SNBC Ch.7.7 p.80, Table 18 -- Halt deforestation, protect 3.6M ha"
-description: >-
-  SNBC Net Zero: Near-complete halt of deforestation to protect 3.6 million ha
-  of existing forest. Magnitude of 0.99999 represents near-total prevention
-  of forest-to-other land conversions. Sigmoid ramp for enforcement scaling.
+citations: null
+description: Halt deforestation of primary and secondary forests
 identifiers:
   transformation_code: "TX:LNDU:DEC_DEFORESTATION_STRATEGY_NDC"
-  transformation_name: "SNBC NDC - LNDU: Halt deforestation"
+  transformation_name: "Scaled Default Max Parameters by 1 - LNDU: Stop deforestation"
 parameters:
   magnitude: 0.99999
   vec_implementation_ramp:
-    tp_0_ramp: 7
-    n_tp_ramp: 18
-    alpha_logistic: 0.5
-    window_logistic: [-8, 8]
+    tp_0_ramp: 10
 transformer: "TFR:LNDU:DEC_DEFORESTATION"

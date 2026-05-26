@@ -10,5 +10,5 @@ identifiers:
 parameters:
   magnitude: 0.95
   vec_implementation_ramp:
-    tp_0_ramp: 12
+    tp_0_ramp: 10
 transformer: "TFR:LNDU:DEC_SOC_LOSS_PASTURES"

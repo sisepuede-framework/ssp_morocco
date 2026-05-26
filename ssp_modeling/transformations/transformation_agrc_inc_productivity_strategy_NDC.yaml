@@ -1,16 +1,10 @@
-citations:
-  - "SNBC Ch.7.6 p.79, Table 17 -- Improved varieties, irrigation, precision agriculture"
-description: >-
-  SNBC Net Zero: Increase crop productivity by 30% through improved varieties,
-  irrigation expansion, and precision agriculture techniques.
+citations: null
+description: Increase crop yield factors by 20%
 identifiers:
   transformation_code: "TX:AGRC:INC_PRODUCTIVITY_STRATEGY_NDC"
-  transformation_name: "SNBC NDC - AGRC: 30% crop productivity improvement"
+  transformation_name: "Scaled Default Max Parameters by 1 - AGRC: Improve crop productivity"
 parameters:
-  magnitude: 0.30
+  magnitude: 0.2
   vec_implementation_ramp:
     tp_0_ramp: 10
-    n_tp_ramp: 25
-    alpha_logistic: 0.0
-    window_logistic: [-8, 8]
 transformer: "TFR:AGRC:INC_PRODUCTIVITY"
