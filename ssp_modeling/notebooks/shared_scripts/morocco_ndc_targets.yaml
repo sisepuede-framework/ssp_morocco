@@ -1,0 +1,361 @@
+metadata:
+  source_documents:
+    - "LT-LEDS / SNBC"
+    - "NDC 3.0 (2021)"
+    - "Methane Roadmap"
+    - "WB deck"
+    - "Kigali Amendment"
+  base_year: 2018
+  sim_end_year: 2050
+  notes: "Ramp anchors calibrated for sim_end_year=2050. Status bands: PASS <=5%, WARN 5-15%, FAIL >15%."
+
+targets:
+  # Economy-wide
+  - id: econ_ndc2_uncond_2035
+    sector: Economy
+    indicator: total_co2e_reduction_pct_vs_ref
+    year: 2035
+    target_value: -0.216
+    unit: fraction
+    tolerance_pct: 0.10
+    source_citation: "NDC 3.0 (2021)"
+    notes: "21.6% unconditional reduction vs reference scenario"
+
+  - id: econ_ndc2_cond_2035
+    sector: Economy
+    indicator: total_co2e_reduction_pct_vs_ref
+    year: 2035
+    target_value: -0.53
+    unit: fraction
+    tolerance_pct: 0.10
+    source_citation: "NDC 3.0 (2021)"
+    notes: "53% total (21.6 uncond + 31.4 cond)"
+
+  - id: econ_netzero_2050
+    sector: Economy
+    indicator: net_emissions_mt_co2e
+    year: 2050
+    target_value: 0.0
+    unit: Mt_co2eq
+    tolerance_pct: 0.10
+    source_citation: "LT-LEDS"
+    notes: "Net Zero target"
+
+  # Energy / Electricity
+  - id: entc_renew_share_2030
+    sector: Energy
+    indicator: renewable_electricity_share
+    year: 2030
+    target_value: 0.54
+    unit: fraction
+    source_citation: "LT-LEDS deck"
+    wave_a_known_issue: true
+    notes: "NeMoMod RE share output anomaly; verify mix variable wiring"
+
+  - id: entc_renew_share_2050
+    sector: Energy
+    indicator: renewable_electricity_share
+    year: 2050
+    target_value: 0.95
+    unit: fraction
+    source_citation: "LT-LEDS"
+    wave_a_known_issue: true
+
+  - id: entc_coal_exit_2040
+    sector: Energy
+    indicator: coal_generation_share
+    year: 2040
+    target_value: 0.0
+    unit: fraction
+    tolerance_pct: 0.05
+    source_citation: "LT-LEDS"
+
+  - id: rooftop_pv_2060
+    sector: Energy
+    indicator: rooftop_pv_capacity_gw
+    year: 2060
+    target_value: 4.0
+    unit: GW
+    irreducible_gap: true
+    notes: "No distributed PV lever in SISEPUEDE"
+
+  # Industry (energy)
+  - id: inen_efficiency_2030
+    sector: Energy
+    indicator: industrial_energy_intensity_reduction_pct
+    year: 2030
+    target_value: -0.17
+    unit: fraction
+    source_citation: "NDC 3.0 (unconditional)"
+
+  - id: inen_efficiency_2035
+    sector: Energy
+    indicator: industrial_energy_intensity_reduction_pct
+    year: 2035
+    target_value: -0.22
+    unit: fraction
+    source_citation: "NDC 3.0 (conditional)"
+
+  # Transport
+  - id: trns_ghg_reduction_2050
+    sector: Transport
+    indicator: subsector_emissions_reduction_pct_vs_baseline
+    year: 2050
+    target_value: -0.84
+    unit: fraction
+    source_citation: "LT-LEDS"
+    notes: "vs reference scenario"
+
+  - id: trns_demand_2030
+    sector: Transport
+    indicator: land_transport_demand_reduction_pct
+    year: 2030
+    target_value: -0.19
+    unit: fraction
+    source_citation: "LT-LEDS"
+
+  - id: trns_demand_2050
+    sector: Transport
+    indicator: land_transport_demand_reduction_pct
+    year: 2050
+    target_value: -0.49
+    unit: fraction
+    source_citation: "LT-LEDS"
+
+  - id: trns_ev_ldv_stock_2030
+    sector: Transport
+    indicator: ev_stock_millions
+    year: 2030
+    target_value: 1.0
+    unit: million_vehicles
+    source_citation: "LT-LEDS"
+
+  - id: trns_ev_ldv_stock_2050
+    sector: Transport
+    indicator: ev_stock_millions
+    year: 2050
+    target_value: 10.0
+    unit: million_vehicles
+    source_citation: "LT-LEDS"
+
+  - id: trns_ev_ldv_share_2050
+    sector: Transport
+    indicator: passenger_car_electric_share
+    year: 2050
+    target_value: 0.81
+    unit: fraction
+    source_citation: "LT-LEDS"
+
+  - id: trns_h2_truck_2050
+    sector: Transport
+    indicator: h2_truck_stock
+    year: 2050
+    target_value: 115000
+    unit: vehicles
+    irreducible_gap: true
+    notes: "No H2-specific lever; SHIFT_FUEL_MEDIUM_DUTY proxy only"
+
+  - id: trns_rail_green_2040
+    sector: Transport
+    indicator: rail_green_energy_share
+    year: 2040
+    target_value: 1.00
+    unit: fraction
+    source_citation: "LT-LEDS"
+
+  # Industry / IPPU
+  - id: ippu_phosphate_ccs_2030
+    sector: Industry
+    indicator: phosphate_co2_capture_rate
+    year: 2030
+    target_value: 0.25
+    unit: fraction
+    source_citation: "LT-LEDS"
+    irreducible_gap: true
+    notes: "No plant-specific phosphate CCS lever; proxy via TX:PFLO:INC_IND_CCS"
+
+  - id: ippu_phosphate_ccs_2040
+    sector: Industry
+    indicator: phosphate_co2_capture_rate
+    year: 2040
+    target_value: 0.50
+    unit: fraction
+    source_citation: "LT-LEDS"
+    irreducible_gap: true
+
+  - id: ippu_microalgas_cdr_2050
+    sector: Industry
+    indicator: microalgas_cdr_mt
+    year: 2050
+    target_value: 12.9
+    unit: Mt_co2eq
+    irreducible_gap: true
+    notes: "No microalgas-specific lever; proxy via TX:CCSQ:INC_CAPTURE"
+
+  - id: ippu_hfc_kigali_2050
+    sector: Industry
+    indicator: hfc_emissions_reduction_pct
+    year: 2050
+    target_value: -0.80
+    unit: fraction
+    source_citation: "Kigali Amendment"
+
+  # AFOLU
+  - id: agrc_total_2050
+    sector: AFOLU
+    indicator: ag_emissions_mt
+    year: 2050
+    target_value: 23.0
+    unit: Mt_co2eq
+    source_citation: "LT-LEDS"
+
+  - id: methane_roadmap_2030_low
+    sector: AFOLU
+    indicator: methane_reduction_pct_vs_baseline
+    year: 2030
+    target_value: -0.235
+    unit: fraction
+    source_citation: "Methane Roadmap"
+    wave_a_known_issue: true
+    notes: "Lower bound -23.5%; ramps activate from 2024"
+
+  - id: methane_roadmap_2030_high
+    sector: AFOLU
+    indicator: methane_reduction_pct_vs_baseline
+    year: 2030
+    target_value: -0.362
+    unit: fraction
+    source_citation: "Methane Roadmap"
+    wave_a_known_issue: true
+    notes: "Upper bound -36.2%"
+
+  - id: afolu_reforestation_2050
+    sector: AFOLU
+    indicator: reforestation_area_mha
+    year: 2050
+    target_value: 1.5
+    unit: million_hectares
+    source_citation: "LT-LEDS"
+
+  - id: afolu_no_till_2050
+    sector: AFOLU
+    indicator: no_till_area_mha
+    year: 2050
+    target_value: 2.4
+    unit: million_hectares
+    source_citation: "LT-LEDS"
+
+  - id: afolu_organic_2050
+    sector: AFOLU
+    indicator: organic_farming_area_kha
+    year: 2050
+    target_value: 320
+    unit: kilo_hectares
+    irreducible_gap: true
+    notes: "No organic-specific lever"
+
+  - id: afolu_arboriculture_2050
+    sector: AFOLU
+    indicator: arboriculture_area_mha
+    year: 2050
+    target_value: 1.8
+    unit: million_hectares
+    irreducible_gap: true
+    notes: "No species-specific lever (olive/argan/cactus/date)"
+
+  - id: afolu_forest_sink_2050
+    sector: AFOLU
+    indicator: forest_sink_mt_co2_per_year
+    year: 2050
+    target_value: -54.0
+    unit: Mt_co2eq
+    irreducible_gap: true
+    notes: "Model max ~5-10 Mt; ~45 Mt unreachable inside SISEPUEDE land module"
+
+  - id: afolu_soil_n_reduction_2050
+    sector: AFOLU
+    indicator: soil_n_reduction_pct
+    year: 2050
+    target_value: -0.27
+    unit: fraction
+    source_citation: "LT-LEDS"
+
+  # Waste
+  - id: waste_recycling_aggregate_2050
+    sector: Waste
+    indicator: recycling_rate
+    year: 2050
+    target_value: 0.49
+    unit: fraction
+    source_citation: "LT-LEDS"
+
+  - id: waste_recycling_principal_2030
+    sector: Waste
+    indicator: recycling_rate_principal_sectors
+    year: 2030
+    target_value: 0.75
+    unit: fraction
+    irreducible_gap: true
+    notes: "NDC 70-80% by 2030 physically unreachable (capacity ramp)"
+
+  - id: waste_energy_reduction_2050
+    sector: Waste
+    indicator: energy_related_emissions_reduction_pct
+    year: 2050
+    target_value: -0.38
+    unit: fraction
+    source_citation: "LT-LEDS"
+
+  # Subsector emissions Mt CO2eq (direct comparison with model output)
+  - id: ssp_entc_2018
+    sector: Energy
+    indicator: subsector_emissions_mt
+    subsector: entc
+    year: 2018
+    target_value: 23.73
+    unit: Mt_co2eq
+    source_citation: "NIR 2018 (validated baseline)"
+
+  - id: ssp_trns_2018
+    sector: Transport
+    indicator: subsector_emissions_mt
+    subsector: trns
+    year: 2018
+    target_value: 18.74
+    unit: Mt_co2eq
+    source_citation: "NIR 2018"
+
+  - id: ssp_total_2018
+    sector: Economy
+    indicator: total_emissions_mt
+    year: 2018
+    target_value: 90.37
+    unit: Mt_co2eq
+    source_citation: "NIR 2018 (rescaled)"
+
+  - id: ssp_ippu_2018
+    sector: Industry
+    indicator: subsector_emissions_mt
+    subsector: ippu
+    year: 2018
+    target_value: 5.30
+    unit: Mt_co2eq
+    source_citation: "NIR 2018"
+
+  - id: ssp_waso_2018
+    sector: Waste
+    indicator: subsector_emissions_mt
+    subsector: waso
+    year: 2018
+    target_value: 3.33
+    unit: Mt_co2eq
+    source_citation: "NIR 2018"
+
+  - id: ssp_lvst_2018
+    sector: AFOLU
+    indicator: subsector_emissions_mt
+    subsector: lvst
+    year: 2018
+    target_value: 8.21
+    unit: Mt_co2eq
+    source_citation: "NIR 2018"

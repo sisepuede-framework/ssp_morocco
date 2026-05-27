@@ -1,0 +1,21 @@
+citations:
+description: Missing
+identifiers:
+  transformation_code: "TX:SCOE:SHIFT_FUEL_HEAT_STRATEGY_LEDS"
+  transformation_name: "Scaled Default Max Parameters by 1.0 - SCOE: Switch to electricity
+    for heat using heat pumps, electric stoves, etc."
+parameters:
+  cat_enfu_target: fuel_electricity
+  cats_enfu_source:
+  - fuel_hydrocarbon_gas_liquids
+  - fuel_biomass
+  cats_scoe_apply:
+  magnitude: 0.99
+  vec_implementation_ramp:
+    tp_0_ramp: 10
+    n_tp_ramp: 25
+    alpha_logistic: 0.5
+    window_logistic:
+    - -8
+    - 8
+transformer: "TFR:SCOE:SHIFT_FUEL_HEAT"
