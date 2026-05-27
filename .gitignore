@@ -212,3 +212,6 @@ ssp_james_pip_requirements.txt
 sisepuede_docs/
 ndc exploration/
 Tec Deliverables/
+
+# Ignore Tableau backup files
+.~*.twbr

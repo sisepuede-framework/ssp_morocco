@@ -5,7 +5,7 @@ identifiers:
   transformation_name: "Scaled Default Max Parameters by 1.0 - LNDU: Increase Sequestration"
 parameters:
   cats_frst:
-  magnitude: 7.1
+  magnitude: 18
   return_cats_forest: false
   vec_implementation_ramp:
     tp_0_ramp: 7

@@ -11,15 +11,17 @@ parameters:
   - pp_solar
   - pp_wind
   - pp_hydropower
+  - pp_nuclear
   dict_entc_renewable_target_msp:
     pp_wind: 0.32
     pp_hydropower: 0.32
     pp_solar: 0.31
-  magnitude: 0.95
+    pp_nuclear: 0.02
+  magnitude: 0.97
   scale_non_renewables_to_match_surplus_msp: true
   vec_implementation_ramp:
     tp_0_ramp: 8
-    n_tp_ramp: 21
+    n_tp_ramp: 20
     alpha_logistic: 0.2
     window_logistic:
     - -2

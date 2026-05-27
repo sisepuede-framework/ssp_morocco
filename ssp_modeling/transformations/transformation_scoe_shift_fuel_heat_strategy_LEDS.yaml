@@ -13,9 +13,4 @@ parameters:
   magnitude: 0.99
   vec_implementation_ramp:
     tp_0_ramp: 10
-    n_tp_ramp: 25
-    alpha_logistic: 0.5
-    window_logistic:
-    - -8
-    - 8
 transformer: "TFR:SCOE:SHIFT_FUEL_HEAT"

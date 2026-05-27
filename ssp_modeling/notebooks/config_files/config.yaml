@@ -1,6 +1,6 @@
 country_name: "morocco"
 country_code: "MAR"
-ssp_input_file_name: "sisepuede_raw_input_morocco_fuels.csv"
+ssp_input_file_name: "sisepuede_raw_input_morocco_fuels_inen_ippu_scoe.csv"
 ssp_transformation_cw: "ssp_morocco_transformation_cw.xlsx"
 set_lndu_reallocation_factor_to_zero: true
 energy_model_flag: true
