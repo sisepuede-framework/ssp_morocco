@@ -10,12 +10,10 @@ parameters:
   categories_entc_renewable:
   - pp_solar
   - pp_wind
-  - pp_hydropower
   - pp_nuclear
   dict_entc_renewable_target_msp:
-    pp_wind: 0.32
-    pp_hydropower: 0.32
-    pp_solar: 0.31
+    pp_wind: 0.48
+    pp_solar: 0.47
     pp_nuclear: 0.02
   magnitude: 0.97
   scale_non_renewables_to_match_surplus_msp: true
