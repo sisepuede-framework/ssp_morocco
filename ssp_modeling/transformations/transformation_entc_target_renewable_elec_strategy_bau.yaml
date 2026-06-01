@@ -19,7 +19,7 @@ parameters:
   scale_non_renewables_to_match_surplus_msp: true
   vec_implementation_ramp:
     tp_0_ramp: 20
-    n_tp_ramp: 10
+    n_tp_ramp: 15
     alpha_logistic: 0.2
     window_logistic:
     - -2
