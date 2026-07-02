@@ -111,12 +111,7 @@ def _apply_hp_to_subsec_gas(
 # HP smoothing schedule tuned for Morocco's IPCC subsector naming.
 # Format: (subsector_label, [gases], lambda_hp)
 HP_SCHEDULE = [
-    ("1.A.1 - Energy Industries",                          ["CO2"], 200),
-    ("1.A.2 - Manufacturing Industries and Construction",  ["CO2"], 200),
-    ("1.A.4 - Other Sectors",                              ["CO2"], 200),
-    ("2.A.1 - Cement production",                          ["CO2"], 400),
-    ("2.F.1 - Refrigeration and Air Conditioning",         ["HFCS"], 200),
-    
+
     ("3.A.1 - Enteric Fermentation",                       ["CH4"], 200),
     ("3.A.2 - Manure Management",                          ["CH4"], 200),
     ("3.C.4 - Direct N2O Emissions from managed soils",    ["N2O"], 200),

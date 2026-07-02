@@ -1,4 +1,4 @@
-citations: null
+citations:
 description: Missing
 identifiers:
   transformation_code: "TX:TRNS:SHIFT_FUEL_RAIL_STRATEGY_LEDS"
@@ -7,8 +7,10 @@ parameters:
   categories:
   - rail_freight
   - rail_passenger
-  dict_fuel_allocation: null
+  dict_fuel_allocation:
   magnitude: 0.5
   vec_implementation_ramp:
-    tp_0_ramp: 10
+    tp_0_ramp: 17
+    n_tp_ramp: 23
+    alpha_logistic: 0.0
 transformer: "TFR:TRNS:SHIFT_FUEL_RAIL"

@@ -7,5 +7,7 @@ identifiers:
 parameters:
   magnitude: 0.05
   vec_implementation_ramp:
+    alpha_logistic: 0.0
+    n_tp_ramp: 20
     tp_0_ramp: 10
 transformer: "TFR:SCOE:DEC_DEMAND_HEAT"
