@@ -7,8 +7,11 @@ identifiers:
 parameters:
   magnitude: 0.5
   vec_implementation_ramp:
-    tp_0_ramp: 16
-    n_tp_ramp: 19
-    alpha_logistic: 0.0
+    tp_0_ramp: 14
+    n_tp_ramp: 15
+    alpha_logistic: 0.9
+    window_logistic:
+    - -6.75
+    - 6.5
   magnitude_type: baseline_scalar
 transformer: "TFR:SCOE:INC_EFFICIENCY_APPLIANCE"

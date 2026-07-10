@@ -5,13 +5,13 @@ identifiers:
   transformation_name: "Scaled Default Max Parameters by 1.0 - LNDU: Increase Sequestration"
 parameters:
   cats_frst:
-  magnitude: 12
+  magnitude: 12.8
   return_cats_forest: false
   vec_implementation_ramp:
     tp_0_ramp: 15
-    n_tp_ramp: 20
-    alpha_logistic: 0.2
+    n_tp_ramp: 15
+    alpha_logistic: 0.9
     window_logistic:
-    - -8
-    - 8
+    - -6.75
+    - 6.5
 transformer: "TFR:FRST:INCREASE_SEQUESTRATION"

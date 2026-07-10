@@ -7,10 +7,7 @@ identifiers:
 parameters:
   magnitude: 0.85
   vec_implementation_ramp:
-    tp_0_ramp: 6
-    n_tp_ramp: 22
-    alpha_logistic: 0.4
-    window_logistic:
-    - -3
-    - 8
+    tp_0_ramp: 10
+    n_tp_ramp: 10
+    alpha_logistic: 0.0
 transformer: "TFR:TRWW:INC_CAPTURE_BIOGAS"
