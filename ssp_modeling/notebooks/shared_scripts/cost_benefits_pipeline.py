@@ -98,6 +98,30 @@ def _reshape_for_tableau(
     gdp = ssp_data[["primary_id", "time_period", "gdp_mmm_usd"]].drop_duplicates()
     cb = cb.merge(gdp, on=["primary_id", "time_period"], how="left")
 
+    # 8. TEMP PATCH: drop ENTC technical-cost rows with the wrong sign
+    #    (capex, transmission, ...). Costs are stored negative (Tableau plots
+    #    SUM(value)*-1), so value > 0 here renders as a *negative* cost in the
+    #    dashboard, which is not meaningful. Remove until the upstream ENTC
+    #    technical-cost calculation is fixed.
+    bad_sign = (
+        (cb["sector"] == "entc")
+        & (cb["cb_type"] == "technical_cost")
+        & (cb["value"] > 0)
+    )
+    if bad_sign.any():
+        dropped = cb.loc[bad_sign, ["variable", "strategy_code", "Year"]]
+        print(
+            f"[cb_pipeline] TEMP PATCH: dropping {bad_sign.sum()} wrong-sign "
+            "ENTC technical-cost rows:"
+        )
+        for var, grp in dropped.groupby("variable"):
+            years = ", ".join(
+                f"{s} {y}"
+                for s, y in grp[["strategy_code", "Year"]].itertuples(index=False, name=None)
+            )
+            print(f"    {var}: {years}")
+        cb = cb[~bad_sign].copy()
+
     return cb
 
 
