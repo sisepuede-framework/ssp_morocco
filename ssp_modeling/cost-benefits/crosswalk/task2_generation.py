@@ -7,7 +7,12 @@ sector)' row, which is a residual bucket of demand-side + allocated electricity 
 
 Capex = discounted capital investment by generation technology (LEDS - BASE).
 
-Outputs (millions of 2019 USD): build/task2_fuel_savings.csv, build/task2_capex.csv
+Emits both the aggregated series and the RAW BASE/LEDS detail so the workbook can show the
+calculation transparently:
+  build/task2_fuel_savings.csv   build/task2_fuel_detail.csv
+  build/task2_capex.csv          build/task2_capex_detail.csv
+Values are in millions of 2019 USD (the native NEMOMOD unit); the workbook divides by 1000
+to show bn and names the exact source column for every raw number.
 """
 import pandas as pd
 from ssp_extract import load, series, BASE, LEDS, YEARS, cols_with_prefix
@@ -23,12 +28,11 @@ FUEL_TO_TECH = {
     "coke": "pp_coal", "furnace_gas": "pp_gas",
     "hydrocarbon_gas_liquids": "pp_gas",
 }
-# renewables consume no combustible fuel -> zero fuel savings, listed explicitly
 RENEWABLES = ["pp_solar", "pp_wind", "pp_hydropower", "pp_geothermal", "pp_ocean"]
 
-# ---------- FUEL SAVINGS BY TECH ----------
+# ---------- FUEL SAVINGS: raw detail (base, leds) + aggregated ----------
 tv_prefix = "totalvalue_enfu_fuel_consumed_entc_fuel_"
-rows = []
+detail = []
 for c in cols_with_prefix(tv_prefix):
     fuel = c[len(tv_prefix):]
     if fuel == "electricity":            # own-use, not generation fuel
@@ -38,48 +42,41 @@ for c in cols_with_prefix(tv_prefix):
         continue
     b = series(c, BASE).loc[YEARS]
     l = series(c, LEDS).loc[YEARS]
-    saving = b - l                        # positive = fuel purchase avoided
+    if (b.abs().sum() + l.abs().sum()) < 1e-6:   # skip fuels with no ENTC use at all
+        continue
     for y in YEARS:
-        rows.append({"Year": y, "technology": tech, "fuel": fuel,
-                     "fuel_saving_musd": saving.loc[y]})
-fs = pd.DataFrame(rows)
+        detail.append({"Year": y, "fuel": fuel, "technology": tech, "source_var": c,
+                       "base_musd": b.loc[y], "leds_musd": l.loc[y]})
+fd = pd.DataFrame(detail)
+fd.to_csv("task2_fuel_detail.csv", index=False)
+
+fs = fd.copy()
+fs["fuel_saving_musd"] = fs["base_musd"] - fs["leds_musd"]
 fs_tech = fs.groupby(["Year", "technology"], as_index=False)["fuel_saving_musd"].sum()
-# add renewables at zero for completeness
 for t in RENEWABLES:
-    add = pd.DataFrame({"Year": YEARS, "technology": t, "fuel_saving_musd": 0.0})
-    fs_tech = pd.concat([fs_tech, add], ignore_index=True)
+    fs_tech = pd.concat([fs_tech, pd.DataFrame({"Year": YEARS, "technology": t, "fuel_saving_musd": 0.0})],
+                        ignore_index=True)
 fs_tech.to_csv("task2_fuel_savings.csv", index=False)
 
-# ---------- CAPEX BY TECH ----------
+# ---------- CAPEX: raw detail (base, leds) + aggregated ----------
 cap_prefix = "nemomod_entc_discounted_capital_investment_pp_"
-rows = []
+cdetail = []
 for c in cols_with_prefix(cap_prefix):
     tech = "pp_" + c[len(cap_prefix):]
     b = series(c, BASE).loc[YEARS]
     l = series(c, LEDS).loc[YEARS]
-    inc = l - b                           # positive = extra investment in LTS
+    if (b.abs().sum() + l.abs().sum()) < 1e-6:
+        continue
     for y in YEARS:
-        rows.append({"Year": y, "technology": tech, "capex_incremental_musd": inc.loc[y]})
-cx = pd.DataFrame(rows)
-cx.to_csv("task2_capex.csv", index=False)
+        cdetail.append({"Year": y, "technology": tech, "source_var": c,
+                        "base_musd": b.loc[y], "leds_musd": l.loc[y]})
+cd = pd.DataFrame(cdetail)
+cd.to_csv("task2_capex_detail.csv", index=False)
 
-# ---------- reconciliation printout ----------
-def cum(dfx, val, key="technology"):
-    return dfx.groupby(key)[val].sum().sort_values(key=lambda s: -s.abs())
+cx = cd.copy()
+cx["capex_incremental_musd"] = cx["leds_musd"] - cx["base_musd"]
+cx[["Year", "technology", "capex_incremental_musd"]].to_csv("task2_capex.csv", index=False)
 
-print("=== FUEL COST SAVINGS by technology (cumulative 2023-50, million 2019 USD) ===")
-fsum = cum(fs_tech, "fuel_saving_musd")
-for k, v in fsum.items():
-    print(f"  {k:22s} {v/1000:9.2f} bn")
-print(f"  {'TOTAL':22s} {fsum.sum()/1000:9.2f} bn   (CB 'power sector' row = 9.76 bn — different thing)")
-
-print("\n=== CAPEX by technology (incremental LTS-BASE, cumulative 2023-50, million USD) ===")
-csum = cum(cx, "capex_incremental_musd")
-for k, v in csum.items():
-    print(f"  {k:22s} {v/1000:9.2f} bn")
-print(f"  {'NET TOTAL':22s} {csum.sum()/1000:9.2f} bn")
-pos = cx[cx.capex_incremental_musd > 0].groupby("technology")["capex_incremental_musd"].sum()
-print(f"  {'GROSS ADDITIONS':22s} {pos.sum()/1000:9.2f} bn  (positive builds only)")
-print("  gross-addition shares (feed Task 1 power cost-vector):")
-for k, v in (pos/pos.sum()).sort_values(ascending=False).items():
-    print(f"    {k:20s} {v*100:5.1f}%")
+if __name__ == "__main__":
+    print("fuel detail rows:", len(fd), " fuels:", sorted(fd.fuel.unique()))
+    print("capex detail rows:", len(cd), " techs:", sorted(cd.technology.unique()))

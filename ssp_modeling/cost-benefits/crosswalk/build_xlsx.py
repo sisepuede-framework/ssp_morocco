@@ -178,43 +178,103 @@ for j in range(2, len(SECTORS)+3):
     ws.cell(rtot, j).number_format = BN; ws.cell(rtot, j).fill = GREYF
 ws.freeze_panes = "B2"
 
-# ---------------- T2 tabs ----------------
-def t2_matrix(sheet, csv, valcol, title):
-    df = pd.read_csv(os.path.join(HERE, csv))
-    piv = df.pivot_table(index="Year", columns="technology", values=valcol, aggfunc="sum").fillna(0)
-    piv = piv / 1000.0   # million -> billion
-    # order columns by cumulative magnitude
-    order = piv.sum().sort_values(key=lambda s: -s.abs()).index.tolist()
-    piv = piv[order]
+# ---------------- T2 tabs (transparent: raw BASE + raw LEDS + formula) ----------------
+def t2_transparent(sheet, detail_csv, title, method_lines, calc_label, minuend, subtrahend,
+                   collabel):
+    """Stack three Year x category blocks: raw BASE, raw LEDS, and the difference as live
+    formulas (minuend - subtrahend). Every raw number names its NEMOMOD source column."""
+    d = pd.read_csv(os.path.join(HERE, detail_csv))
+    d["cat"] = d["technology"] if "fuel" not in d.columns else (
+        d["fuel"] + " (" + d["technology"] + ")")
+    base = d.pivot_table(index="Year", columns="cat", values="base_musd", aggfunc="sum").fillna(0) / 1000.0
+    leds = d.pivot_table(index="Year", columns="cat", values="leds_musd", aggfunc="sum").fillna(0) / 1000.0
+    calc = (base - leds) if (minuend == "BASE") else (leds - base)
+    order = calc.sum().sort_values(key=lambda s: -s.abs()).index.tolist()
+    base, leds = base[order], leds[order]
+    src = {c: d.loc[d["cat"] == c, "source_var"].iloc[0] for c in order}
+    yrs = list(base.index)
+
     ws = wb.create_sheet(sheet)
-    ws.cell(1, 1, title).font = BOLD
-    ws.cell(2, 1, "bn 2019 USD; technologies ordered by cumulative magnitude").font = Font(name=FN, size=9, italic=True)
-    hrow = 3
-    ws.cell(hrow, 1, "Year")
-    for j, t in enumerate(order, 2):
-        ws.cell(hrow, j, t)
-    style_header(ws, hrow, len(order)+1)
-    ws.column_dimensions["A"].width = 10
+    ws.column_dimensions["A"].width = 12
     for j in range(2, len(order)+2):
-        ws.column_dimensions[get_column_letter(j)].width = 15
-    for i, y in enumerate(piv.index):
-        r = hrow+1+i
-        ws.cell(r, 1, int(y)).font = Font(name=FN)
-        for j, t in enumerate(order, 2):
-            ws.cell(r, j, round(float(piv.loc[y, t]), 4)).font = BLACK
-            ws.cell(r, j).number_format = BN
-    rc = hrow+1+len(piv.index)
+        ws.column_dimensions[get_column_letter(j)].width = 17
+    ws.cell(1, 1, title).font = BOLD
+    r = 2
+    for ln in method_lines:
+        ws.cell(r, 1, ln).font = Font(name=FN, size=9, italic=True); ws.cell(r, 1).alignment = WRAP
+        r += 1
+    r += 1
+
+    def block(startr, header, values_getter, is_formula=False, base_row0=None, leds_row0=None):
+        ws.cell(startr, 1, header).font = BOLD
+        for c in range(1, len(order)+2):
+            ws.cell(startr, c).fill = GREYF
+        hr = startr + 1
+        ws.cell(hr, 1, "Year")
+        for j, cat in enumerate(order, 2):
+            ws.cell(hr, j, cat)
+        style_header(ws, hr, len(order)+1)
+        for i, y in enumerate(yrs):
+            rr = hr + 1 + i
+            ws.cell(rr, 1, int(y)).font = Font(name=FN)
+            for j, cat in enumerate(order, 2):
+                if is_formula:
+                    L = get_column_letter(j)
+                    ws.cell(rr, j, f"={L}{base_row0+i}-{L}{leds_row0+i}" if minuend == "BASE"
+                            else f"={L}{leds_row0+i}-{L}{base_row0+i}").font = BLACK
+                else:
+                    ws.cell(rr, j, round(float(values_getter.loc[y, cat]), 4)).font = BLUE
+                ws.cell(rr, j).number_format = BN
+        # source-variable row under each raw block
+        return hr + 1  # first data row
+
+    # BASE block
+    r_base_hdr = r
+    base_row0 = block(r, f"RAW — {collabel} in BASE / no-action (bn)", base)
+    r = base_row0 + len(yrs) + 1
+    ws.cell(r-1, 1, "source: " + ", ".join(f"{c}={src[c]}" for c in order[:2]) + " ...").font = Font(name=FN, size=8, color="808080")
+    r += 1
+    # LEDS block
+    leds_row0 = block(r, f"RAW — {collabel} in LEDS / LTS (bn)", leds)
+    r = leds_row0 + len(yrs) + 2
+    # CALC block (formulas)
+    calc_row0 = block(r, f"CALC — {calc_label} (bn)  [each cell = a raw-BASE cell minus the raw-LEDS cell above]",
+                      None, is_formula=True, base_row0=base_row0, leds_row0=leds_row0)
+    rc = calc_row0 + len(yrs)
     ws.cell(rc, 1, "CUMULATIVE").font = BOLD
     for j in range(2, len(order)+2):
         L = get_column_letter(j)
-        ws.cell(rc, j, f"=SUM({L}{hrow+1}:{L}{rc-1})").font = BOLD
+        ws.cell(rc, j, f"=SUM({L}{calc_row0}:{L}{rc-1})").font = BOLD
         ws.cell(rc, j).number_format = BN; ws.cell(rc, j).fill = GREYF
-    ws.freeze_panes = "B4"
+    ws.freeze_panes = "B2"
+    return calc_row0, rc
 
-t2_matrix("T2_fuel_savings", "task2_fuel_savings.csv", "fuel_saving_musd",
-          "Task 2 — Power-sector FUEL COST SAVINGS by generation technology (BASE minus LEDS)")
-t2_matrix("T2_capex_by_tech", "task2_capex.csv", "capex_incremental_musd",
-          "Task 2 — Generation CAPEX by technology (incremental LEDS minus BASE, discounted)")
+fs_method = [
+ "HOW THIS WAS COMPUTED (fuel cost savings by generation technology):",
+ "1. Raw data: for each fuel, the value of fuel consumed by the power sector, per scenario and year, straight",
+ "   from NEMOMOD column  totalvalue_enfu_fuel_consumed_entc_fuel_<fuel>  (= physical consumption x fuel price).",
+ "2. Two raw blocks below show that variable in BASE (no-action) and in LEDS (LTS), in bn 2019 USD.",
+ "3. Saving = BASE minus LEDS (the CALC block; every cell is a live formula subtracting the two raw cells).",
+ "4. Each fuel is mapped 1:1 to the plant that burns it (coal->pp_coal, natural gas->pp_gas, oil->pp_oil, ...).",
+ "   Renewables (solar/wind/hydro) burn no fuel -> no row here -> zero saving (correct: the saving is the",
+ "   avoided coal/oil/gas purchase). This is NOT the CB 'Fuel cost savings (power sector)' row (a residual).",
+]
+t2_transparent("T2_fuel_savings", "task2_fuel_detail.csv",
+               "Task 2 — Power-sector FUEL COST SAVINGS by generation technology",
+               fs_method, "Fuel saving = BASE minus LEDS", "BASE", "LEDS", "fuel value")
+
+cx_method = [
+ "HOW THIS WAS COMPUTED (generation capex by technology):",
+ "1. Raw data: discounted capital investment by plant technology, per scenario and year, straight from NEMOMOD",
+ "   column  nemomod_entc_discounted_capital_investment_pp_<tech>, in bn 2019 USD.",
+ "2. Two raw blocks below show that variable in BASE (no-action) and in LEDS (LTS).",
+ "3. Incremental capex = LEDS minus BASE (the CALC block; every cell is a live formula). Positive = extra build",
+ "   in the LTS; negative = fossil capex avoided. Gross positive additions drive the per-technology power cost",
+ "   vector in Task 1 (T1_cost_vectors). Net (all techs) = 55.8 bn = the generation part of the 65.5 bn power path.",
+]
+t2_transparent("T2_capex_by_tech", "task2_capex_detail.csv",
+               "Task 2 — Generation CAPEX by technology (discounted)",
+               cx_method, "Incremental capex = LEDS minus BASE", "LEDS", "BASE", "capex")
 
 # ---------------- T2_note ----------------
 ws = wb.create_sheet("T2_note")
