@@ -542,26 +542,35 @@ def veh_section(mode, divisor):
 EST_BLOCKS = []
 veh_section("road_light", 12000)
 veh_section("public", 60000)
+veh_section("road_heavy_freight", 60000)
 ws.freeze_panes = "B2"
 
-# ---- chart: final output of Task 4 (stacked area, vehicles by fuel, per strategy) ----
+# ---- charts: final output of Task 4 (stacked area, vehicles by fuel, per strategy) ----
 from openpyxl.chart import AreaChart, Reference
 cws = wb.create_sheet("T4_EVs_chart")
-cws.cell(1, 1, "Task 4 — Number of private light vehicles (road_light) by fuel, per strategy").font = BOLD
-cws.cell(2, 1, "Stacked area of the ESTIMATION blocks in T4_vehicles (vehicles = VKM / 12,000). "
-              "Reproduces the Tableau 'EVs-Private' view; note the full shift to Electricity under LTS.").font = Font(name=FN, size=9, italic=True)
+cws.cell(1, 1, "Task 4 — Number of vehicles by fuel, per strategy (stacked area)").font = BOLD
+cws.cell(2, 1, "Stacked area of the ESTIMATION blocks in T4_vehicles (vehicles = VKM / divisor). Reproduces the "
+              "Tableau 'EVs-Private' (road_light) and 'EVs-Public' (public, road_heavy_freight) views. Note under LTS: "
+              "road_light -> Electricity, road_heavy_freight -> Hydrogen.").font = Font(name=FN, size=9, italic=True)
+MODE_TITLE = {"road_light": "Private light vehicles (road_light, /12,000)",
+              "public": "Public transport (public, /60,000)",
+              "road_heavy_freight": "Heavy freight trucks (road_heavy_freight, /60,000)"}
 anchor_row = 4
-for blk in [b for b in EST_BLOCKS if b["mode"] == "road_light"]:
-    ch = AreaChart(); ch.grouping = "stacked"; ch.overlap = 100
-    ch.title = f"road_light vehicles by fuel — {blk['strat']}"
-    ch.height = 8.5; ch.width = 20
-    ch.y_axis.title = "Vehicles"; ch.x_axis.title = "Year"
-    data = Reference(ws, min_col=2, max_col=1 + blk["nfuel"], min_row=blk["hdr"], max_row=blk["dn"])
-    cats = Reference(ws, min_col=1, min_row=blk["d0"], max_row=blk["dn"])
-    ch.add_data(data, titles_from_data=True)
-    ch.set_categories(cats)
-    cws.add_chart(ch, f"A{anchor_row}")
-    anchor_row += 18
+for mode in ["road_light", "public", "road_heavy_freight"]:
+    cws.cell(anchor_row, 1, MODE_TITLE[mode]).font = Font(name=FN, bold=True, size=12)
+    anchor_row += 1
+    for blk in [b for b in EST_BLOCKS if b["mode"] == mode]:
+        ch = AreaChart(); ch.grouping = "stacked"; ch.overlap = 100
+        ch.title = f"{mode} vehicles by fuel — {blk['strat']}"
+        ch.height = 8.0; ch.width = 20
+        ch.y_axis.title = "Vehicles"; ch.x_axis.title = "Year"
+        data = Reference(ws, min_col=2, max_col=1 + blk["nfuel"], min_row=blk["hdr"], max_row=blk["dn"])
+        cats = Reference(ws, min_col=1, min_row=blk["d0"], max_row=blk["dn"])
+        ch.add_data(data, titles_from_data=True)
+        ch.set_categories(cats)
+        cws.add_chart(ch, f"A{anchor_row}")
+        anchor_row += 17
+    anchor_row += 2
 
 # ---- energy mix ----
 gen, totf, secs, gunits = t4.energy_mix()

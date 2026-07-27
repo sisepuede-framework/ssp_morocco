@@ -15,12 +15,12 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 DRIVERS = "/Users/fabianfuentes/git/ssp_morocco/ssp_modeling/tableau/data/drivers_morocco.csv"
 
 # Number-of-vehicles logic RECONSTRUCTED from the Tableau workbook
-# (Morocco_CaseStudy_2026_07_16.twb), sheet "EVs-Private":
+# (Morocco_CaseStudy_2026_07_16.twb), sheets "EVs-Private" and "EVs-Public":
 #   Value_road_ligth = [value]/12000     (private light-duty vehicles)
-#   Value_public     = [value]/60000     (public transport)
+#   Value_public     = [value]/60000     (public transport AND road_heavy_freight; the
+#                                         "EVs-Public" view plots both on Value_public)
 # where [value] = vehicle_distance_traveled_trns_<mode>_<fuel> (vehicle-km).
-# Only these two modes have a divisor defined in Tableau, so only these are reconstructed.
-DIVISOR = {"road_light": 12000, "public": 60000}
+DIVISOR = {"road_light": 12000, "public": 60000, "road_heavy_freight": 60000}
 FLEET_MODES = list(DIVISOR.keys())
 
 # Tableau strategy aliases (raw run code -> display label)
