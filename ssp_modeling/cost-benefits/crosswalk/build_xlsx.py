@@ -472,20 +472,27 @@ for ln in method:
     r += 1
 r += 1
 
-def veh_blocks(mode, divisor):
+def veh_section(mode, divisor):
+    """T2-style layout: ALL raw VKM blocks first, THEN all vehicle-estimation blocks
+    (formulas referencing the raw blocks above)."""
     global r
     fuels = [f for f in t4.FUEL_ORDER
              if ((veh["mode"] == mode) & (veh.fuel == f)).any()
              and veh[(veh["mode"] == mode) & (veh.fuel == f)]["vkm"].abs().sum() > 0]
     ws.cell(r, 1, f"{mode.upper()}  —  divisor {divisor:,} km/veh/yr").font = Font(name=FN, bold=True, size=12)
     r += 2
+
+    # ---------- RAW SECTION (all strategies) ----------
+    ws.cell(r, 1, f"DATOS RAW — VKM (vehicle-km) por combustible; fuente: vehicle_distance_traveled_trns_{mode}_<fuel>").font = BOLD
+    r += 1
+    raw_start = {}
+    yrs_ref = None
     for strat in STRAT_ORDER:
-        sub = veh[(veh["mode"] == mode) & (veh.strategy == strat)]
-        vp = sub.pivot_table(index="Year", columns="fuel", values="vkm", aggfunc="sum").fillna(0)
-        vp = vp.reindex(columns=fuels).fillna(0)
-        yrs = list(vp.index)
-        # RAW VKM block
-        ws.cell(r, 1, f"RAW VKM (vehicle-km) — {strat}").font = BOLD
+        vp = (veh[(veh["mode"] == mode) & (veh.strategy == strat)]
+              .pivot_table(index="Year", columns="fuel", values="vkm", aggfunc="sum")
+              .fillna(0).reindex(columns=fuels).fillna(0))
+        yrs = list(vp.index); yrs_ref = yrs
+        ws.cell(r, 1, f"RAW VKM — {strat}").font = BOLD
         for c in range(1, len(fuels)+2):
             ws.cell(r, c).fill = GREYF
         hr = r + 1
@@ -493,39 +500,45 @@ def veh_blocks(mode, divisor):
         for j, f in enumerate(fuels, 2):
             ws.cell(hr, j, f)
         style_header(ws, hr, len(fuels)+1)
-        raw0 = hr + 1
+        d0 = hr + 1
         for i, y in enumerate(yrs):
-            rr = raw0 + i
+            rr = d0 + i
             ws.cell(rr, 1, int(y)).font = Font(name=FN)
             for j, f in enumerate(fuels, 2):
                 ws.cell(rr, j, round(float(vp.loc[y, f]), 1)).font = BLUE
                 ws.cell(rr, j).number_format = "#,##0"
-        # VEHICLES = VKM / divisor block (formulas)
-        vr = raw0 + len(yrs) + 1
-        ws.cell(vr, 1, f"VEHICLES = VKM / {divisor:,}  — {strat}").font = BOLD
-        for c in range(1, len(fuels)+2):
-            ws.cell(vr, c).fill = GREYF
-        vhr = vr + 1
-        ws.cell(vhr, 1, "Year")
+        raw_start[strat] = d0
+        r = d0 + len(yrs) + 1
+
+    # ---------- ESTIMATION SECTION (all strategies) ----------
+    r += 1
+    ws.cell(r, 1, f"ESTIMACIÓN — vehículos = VKM / {divisor:,}  (cada celda = la celda RAW de arriba entre {divisor:,})").font = BOLD
+    r += 1
+    for strat in STRAT_ORDER:
+        raw0 = raw_start[strat]
+        ws.cell(r, 1, f"VEHÍCULOS — {strat}").font = BOLD
+        for c in range(1, len(fuels)+3):
+            ws.cell(r, c).fill = GREYF
+        hr = r + 1
+        ws.cell(hr, 1, "Year")
         for j, f in enumerate(fuels, 2):
-            ws.cell(vhr, j, f)
-        ws.cell(vhr, len(fuels)+2, "TOTAL")
-        style_header(ws, vhr, len(fuels)+2)
-        veh0 = vhr + 1
-        for i, y in enumerate(yrs):
-            rr = veh0 + i
+            ws.cell(hr, j, f)
+        ws.cell(hr, len(fuels)+2, "TOTAL")
+        style_header(ws, hr, len(fuels)+2)
+        d0 = hr + 1
+        for i, y in enumerate(yrs_ref):
+            rr = d0 + i
             ws.cell(rr, 1, int(y)).font = Font(name=FN)
             for j, f in enumerate(fuels, 2):
                 L = get_column_letter(j)
                 ws.cell(rr, j, f"={L}{raw0+i}/{divisor}").font = BLACK
                 ws.cell(rr, j).number_format = "#,##0"
-            tl = get_column_letter(len(fuels)+2)
             ws.cell(rr, len(fuels)+2, f"=SUM(B{rr}:{get_column_letter(len(fuels)+1)}{rr})").font = BOLD
             ws.cell(rr, len(fuels)+2).number_format = "#,##0"
-        r = veh0 + len(yrs) + 2
+        r = d0 + len(yrs_ref) + 2
 
-veh_blocks("road_light", 12000)
-veh_blocks("public", 60000)
+veh_section("road_light", 12000)
+veh_section("public", 60000)
 ws.freeze_panes = "B2"
 
 # ---- energy mix ----
