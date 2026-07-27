@@ -483,7 +483,7 @@ def veh_section(mode, divisor):
     r += 2
 
     # ---------- RAW SECTION (all strategies) ----------
-    ws.cell(r, 1, f"DATOS RAW — VKM (vehicle-km) por combustible; fuente: vehicle_distance_traveled_trns_{mode}_<fuel>").font = BOLD
+    ws.cell(r, 1, f"RAW DATA — VKM (vehicle-km) by fuel; source: vehicle_distance_traveled_trns_{mode}_<fuel>").font = BOLD
     r += 1
     raw_start = {}
     yrs_ref = None
@@ -512,11 +512,11 @@ def veh_section(mode, divisor):
 
     # ---------- ESTIMATION SECTION (all strategies) ----------
     r += 1
-    ws.cell(r, 1, f"ESTIMACIÓN — vehículos = VKM / {divisor:,}  (cada celda = la celda RAW de arriba entre {divisor:,})").font = BOLD
+    ws.cell(r, 1, f"ESTIMATION — vehicles = VKM / {divisor:,}  (each cell = the RAW cell above divided by {divisor:,})").font = BOLD
     r += 1
     for strat in STRAT_ORDER:
         raw0 = raw_start[strat]
-        ws.cell(r, 1, f"VEHÍCULOS — {strat}").font = BOLD
+        ws.cell(r, 1, f"VEHICLES — {strat}").font = BOLD
         for c in range(1, len(fuels)+3):
             ws.cell(r, c).fill = GREYF
         hr = r + 1
@@ -535,11 +535,33 @@ def veh_section(mode, divisor):
                 ws.cell(rr, j).number_format = "#,##0"
             ws.cell(rr, len(fuels)+2, f"=SUM(B{rr}:{get_column_letter(len(fuels)+1)}{rr})").font = BOLD
             ws.cell(rr, len(fuels)+2).number_format = "#,##0"
+        EST_BLOCKS.append({"mode": mode, "strat": strat, "hdr": hr, "d0": d0,
+                           "dn": d0 + len(yrs_ref) - 1, "nfuel": len(fuels)})
         r = d0 + len(yrs_ref) + 2
 
+EST_BLOCKS = []
 veh_section("road_light", 12000)
 veh_section("public", 60000)
 ws.freeze_panes = "B2"
+
+# ---- chart: final output of Task 4 (stacked area, vehicles by fuel, per strategy) ----
+from openpyxl.chart import AreaChart, Reference
+cws = wb.create_sheet("T4_EVs_chart")
+cws.cell(1, 1, "Task 4 — Number of private light vehicles (road_light) by fuel, per strategy").font = BOLD
+cws.cell(2, 1, "Stacked area of the ESTIMATION blocks in T4_vehicles (vehicles = VKM / 12,000). "
+              "Reproduces the Tableau 'EVs-Private' view; note the full shift to Electricity under LTS.").font = Font(name=FN, size=9, italic=True)
+anchor_row = 4
+for blk in [b for b in EST_BLOCKS if b["mode"] == "road_light"]:
+    ch = AreaChart(); ch.grouping = "stacked"; ch.overlap = 100
+    ch.title = f"road_light vehicles by fuel — {blk['strat']}"
+    ch.height = 8.5; ch.width = 20
+    ch.y_axis.title = "Vehicles"; ch.x_axis.title = "Year"
+    data = Reference(ws, min_col=2, max_col=1 + blk["nfuel"], min_row=blk["hdr"], max_row=blk["dn"])
+    cats = Reference(ws, min_col=1, min_row=blk["d0"], max_row=blk["dn"])
+    ch.add_data(data, titles_from_data=True)
+    ch.set_categories(cats)
+    cws.add_chart(ch, f"A{anchor_row}")
+    anchor_row += 18
 
 # ---- energy mix ----
 gen, totf, secs, gunits = t4.energy_mix()
