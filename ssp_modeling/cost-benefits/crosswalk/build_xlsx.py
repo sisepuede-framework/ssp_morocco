@@ -63,7 +63,7 @@ lines = [
  ("  T2_note          : why these differ from the CB 'Fuel cost savings (power sector)' row. READ THIS.", False),
  ("  T3_agent_split / T3_cost_vectors / T3_applied_SAM : benefits crosswalk (12 categories, 826.1 bn; 4 non-market", False),
  ("                     categories excluded; food savings -> households/food retail; livestock value stays negative).", False),
- ("  T4_vehicles      : number of vehicles (fleet) by mode, LEDS, via VKT / annual-km-per-vehicle.", False),
+ ("  T4_vehicles      : number of vehicles by fuel x strategy = VKM / Tableau divisor (road_light /12,000, public /60,000).", False),
  ("  T4_elec_generation / T4_energy_by_fuel : energy mix exported from the Tableau 'drivers' datasource.", False),
  ("  T5_ecosystem_split : evidence-based split of the $500/ha forest value (de Groot 2012 / Costanza 2014; food+carbon", False),
  ("                     stripped and renormalised; tourism = the cultural/recreation subset, not a parallel category).", False),
@@ -450,24 +450,83 @@ def write_pivot(sheet, piv, title, subtitle, valfmt="#,##0", cum_row=False, inde
     ws.freeze_panes = "B4"
     return ws
 
-# ---- vehicles ----
+# ---- vehicles (reconstructed with the Tableau divisor logic) ----
 veh = t4.vehicles()
-led = veh[veh.scenario == "LEDS"]
-tot = led.pivot_table(index="Year", columns="mode", values="vehicles", aggfunc="sum").fillna(0)
-elec = led[led.fuel == "electricity"].pivot_table(index="Year", columns="mode", values="vehicles", aggfunc="sum").fillna(0)
-tot = tot[t4.FLEET_MODES]; elec = elec.reindex(columns=t4.FLEET_MODES).fillna(0)
-tot.columns = [f"{m} (total)" for m in tot.columns]
-elec.columns = [f"{m} (electric)" for m in t4.FLEET_MODES]
-veh_wide = pd.concat([tot, elec], axis=1)
-ws = write_pivot("T4_vehicles", veh_wide,
-                 "Task 4 — Number of vehicles (fleet), LEDS scenario",
-                 "Fleet = VKT / annual-km-per-vehicle. Annual km: road_light 15,000; freight 60,000; "
-                 "regional 55,000; public 45,000; powered_bikes 8,000. VKT from vehicle_distance_traveled_trns_*.",
-                 valfmt="#,##0")
-# assumptions footer
-fr = ws.max_row + 2
-ws.cell(fr, 1, "Assumptions are documented judgment / prior-notebook values (trucks 60,000 km/yr). "
-              "Counts are vehicles, not thousands. road_light is fully electric by 2050 under LEDS.").font = Font(name=FN, size=9, italic=True)
+STRAT_ORDER = ["Business as Usual - CDN", "Baseline Scenario - SNBC", "LTS"]
+ws = wb.create_sheet("T4_vehicles")
+ws.column_dimensions["A"].width = 13
+for j in range(2, 10):
+    ws.column_dimensions[get_column_letter(j)].width = 16
+ws.cell(1, 1, "Task 4 — Number of vehicles, reconstructed from the Tableau logic").font = BOLD
+method = [
+ "HOW THIS WAS COMPUTED (matches the Tableau sheet 'EVs-Private'):",
+ "  vehicles = VKM / divisor, where VKM = vehicle_distance_traveled_trns_<mode>_<fuel> (vehicle-km, per fuel),",
+ "  and the divisor is the km/vehicle/year set in Tableau: road_light = 12,000 (field Value_road_ligth = [value]/12000),",
+ "  public = 60,000 (field Value_public = [value]/60000). Only these two modes have a Tableau divisor.",
+ "  Strategy labels (Tableau aliases): BASE = 'Business as Usual - CDN', bau = 'Baseline Scenario - SNBC', LEDS = 'LTS'.",
+ "  Below, each strategy shows the RAW VKM by fuel and the vehicles = VKM/divisor as a live formula (blue = raw model output).",
+]
+r = 2
+for ln in method:
+    ws.cell(r, 1, ln).font = Font(name=FN, size=9, italic=True); ws.cell(r, 1).alignment = WRAP
+    r += 1
+r += 1
+
+def veh_blocks(mode, divisor):
+    global r
+    fuels = [f for f in t4.FUEL_ORDER
+             if ((veh["mode"] == mode) & (veh.fuel == f)).any()
+             and veh[(veh["mode"] == mode) & (veh.fuel == f)]["vkm"].abs().sum() > 0]
+    ws.cell(r, 1, f"{mode.upper()}  —  divisor {divisor:,} km/veh/yr").font = Font(name=FN, bold=True, size=12)
+    r += 2
+    for strat in STRAT_ORDER:
+        sub = veh[(veh["mode"] == mode) & (veh.strategy == strat)]
+        vp = sub.pivot_table(index="Year", columns="fuel", values="vkm", aggfunc="sum").fillna(0)
+        vp = vp.reindex(columns=fuels).fillna(0)
+        yrs = list(vp.index)
+        # RAW VKM block
+        ws.cell(r, 1, f"RAW VKM (vehicle-km) — {strat}").font = BOLD
+        for c in range(1, len(fuels)+2):
+            ws.cell(r, c).fill = GREYF
+        hr = r + 1
+        ws.cell(hr, 1, "Year")
+        for j, f in enumerate(fuels, 2):
+            ws.cell(hr, j, f)
+        style_header(ws, hr, len(fuels)+1)
+        raw0 = hr + 1
+        for i, y in enumerate(yrs):
+            rr = raw0 + i
+            ws.cell(rr, 1, int(y)).font = Font(name=FN)
+            for j, f in enumerate(fuels, 2):
+                ws.cell(rr, j, round(float(vp.loc[y, f]), 1)).font = BLUE
+                ws.cell(rr, j).number_format = "#,##0"
+        # VEHICLES = VKM / divisor block (formulas)
+        vr = raw0 + len(yrs) + 1
+        ws.cell(vr, 1, f"VEHICLES = VKM / {divisor:,}  — {strat}").font = BOLD
+        for c in range(1, len(fuels)+2):
+            ws.cell(vr, c).fill = GREYF
+        vhr = vr + 1
+        ws.cell(vhr, 1, "Year")
+        for j, f in enumerate(fuels, 2):
+            ws.cell(vhr, j, f)
+        ws.cell(vhr, len(fuels)+2, "TOTAL")
+        style_header(ws, vhr, len(fuels)+2)
+        veh0 = vhr + 1
+        for i, y in enumerate(yrs):
+            rr = veh0 + i
+            ws.cell(rr, 1, int(y)).font = Font(name=FN)
+            for j, f in enumerate(fuels, 2):
+                L = get_column_letter(j)
+                ws.cell(rr, j, f"={L}{raw0+i}/{divisor}").font = BLACK
+                ws.cell(rr, j).number_format = "#,##0"
+            tl = get_column_letter(len(fuels)+2)
+            ws.cell(rr, len(fuels)+2, f"=SUM(B{rr}:{get_column_letter(len(fuels)+1)}{rr})").font = BOLD
+            ws.cell(rr, len(fuels)+2).number_format = "#,##0"
+        r = veh0 + len(yrs) + 2
+
+veh_blocks("road_light", 12000)
+veh_blocks("public", 60000)
+ws.freeze_panes = "B2"
 
 # ---- energy mix ----
 gen, totf, secs, gunits = t4.energy_mix()
