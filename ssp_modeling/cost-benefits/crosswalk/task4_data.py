@@ -56,6 +56,25 @@ def vehicles():
     return v
 
 
+def elec_production_pj():
+    """Electricity production by technology (PJ) straight from the raw wide run, per scenario.
+    Source: nemomod_entc_annual_production_by_technology_pp_<tech>. Returns
+    {scenario_label: DataFrame(index=Year, columns=tech)} and the tech order."""
+    df = load()
+    prefix = "nemomod_entc_annual_production_by_technology_pp_"
+    cols = [c for c in df.columns if c.startswith(prefix)]
+    out = {}
+    for pid, label in STRAT.items():
+        d = df[df.primary_id == pid].set_index("Year")
+        piv = pd.DataFrame({c[len(prefix):]: d[c] for c in cols}).loc[YEARS]
+        out[label] = piv
+    # order technologies by max share across all scenarios (big first)
+    allsum = sum(out[l].sum() for l in out)
+    order = allsum.sort_values(ascending=False).index.tolist()
+    order = [t for t in order if allsum[t] > 0]
+    return {l: out[l][order] for l in out}, order
+
+
 def energy_mix():
     d = pd.read_csv(DRIVERS)
     d = d[d["strategy"] == "LEDS"]

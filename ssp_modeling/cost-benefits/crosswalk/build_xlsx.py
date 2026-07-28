@@ -572,32 +572,100 @@ for mode in ["road_light", "public", "road_heavy_freight"]:
         anchor_row += 17
     anchor_row += 2
 
-# ---- energy mix ----
-gen, totf, secs, gunits = t4.energy_mix()
-pp = gen[[c for c in gen.columns if str(c).startswith("pp_")]]
-stg = gen[[c for c in gen.columns if str(c).startswith("st_")]]
-pp = pp.loc[:, (pp.sum() > 0)]
-write_pivot("T4_elec_generation", pp,
-            "Task 4 — Electricity generation by technology (LEDS)",
-            f"NemoMod Production by Technology, from the Tableau 'drivers' datasource. Storage (st_*) shown "
-            f"separately below. Units: {gunits or 'model output units (PJ/GWh as in dashboard)'}.",
-            valfmt="#,##0.0")
-# append storage block to same sheet
-wsg = wb["T4_elec_generation"]
-sr = wsg.max_row + 2
-wsg.cell(sr, 1, "Storage (st_*) — discharge, listed separately from generation").font = BOLD
-sr += 1
-wsg.cell(sr, 1, "Year")
-for j, c in enumerate(stg.columns, 2):
-    wsg.cell(sr, j, str(c))
-style_header(wsg, sr, len(stg.columns)+1)
-for i, y in enumerate(stg.index):
-    r = sr+1+i
-    wsg.cell(r, 1, int(y)).font = Font(name=FN)
-    for j, c in enumerate(stg.columns, 2):
-        wsg.cell(r, j, round(float(stg.loc[y, c]), 3)).font = BLACK
-        wsg.cell(r, j).number_format = "#,##0.0"
+# ---- electricity generation: RAW PJ + % of total, per scenario, from the raw run ----
+elec, etech = t4.elec_production_pj()
+STRAT_ORDER3 = ["Business as Usual - CDN", "Baseline Scenario - SNBC", "LTS"]
+ncol = len(etech)
+yrs_e = list(elec[STRAT_ORDER3[0]].index)
+egs = wb.create_sheet("T4_elec_generation")
+egs.column_dimensions["A"].width = 12
+for j in range(2, ncol + 3):
+    egs.column_dimensions[get_column_letter(j)].width = 12
+egs.cell(1, 1, "Task 4 — Electricity production by technology: PJ (raw) and % of total, per scenario").font = BOLD
+enote = [
+ "HOW THIS WAS COMPUTED (electricity generation mix), all straight from the raw run:",
+ "  RAW: electricity produced by each generation technology, per scenario and year, from the raw wide-output",
+ "  column  nemomod_entc_annual_production_by_technology_pp_<tech>  (PJ).",
+ "  Below each raw block: SHARE OF TOTAL = technology PJ / that year's total PJ (live formula). Reproduces the",
+ "  Tableau 'Electricity Generation by Source' view. Scenarios: BASE = 'Business as Usual - CDN',",
+ "  bau = 'Baseline Scenario - SNBC', LEDS = 'LTS'.",
+]
+r = 2
+for ln in enote:
+    egs.cell(r, 1, ln).font = Font(name=FN, size=9, italic=True); egs.cell(r, 1).alignment = WRAP
+    r += 1
+r += 1
+# --- RAW PJ section (all scenarios) ---
+egs.cell(r, 1, "RAW — electricity production (PJ) by technology; source: nemomod_entc_annual_production_by_technology_pp_<tech>").font = BOLD
+r += 1
+raw_pos = {}
+for st in STRAT_ORDER3:
+    piv = elec[st]
+    egs.cell(r, 1, f"RAW PJ — {st}").font = BOLD
+    for c in range(1, ncol + 3):
+        egs.cell(r, c).fill = GREYF
+    hr = r + 1
+    egs.cell(hr, 1, "Year")
+    for j, t in enumerate(etech, 2):
+        egs.cell(hr, j, t)
+    egs.cell(hr, ncol + 2, "TOTAL")
+    style_header(egs, hr, ncol + 2)
+    d0 = hr + 1
+    for i, y in enumerate(yrs_e):
+        rr = d0 + i
+        egs.cell(rr, 1, int(y)).font = Font(name=FN)
+        for j, t in enumerate(etech, 2):
+            egs.cell(rr, j, round(float(piv.loc[y, t]), 3)).font = BLUE
+            egs.cell(rr, j).number_format = "#,##0.0"
+        egs.cell(rr, ncol + 2, f"=SUM(B{rr}:{get_column_letter(ncol+1)}{rr})").font = BOLD
+        egs.cell(rr, ncol + 2).number_format = "#,##0.0"
+    raw_pos[st] = {"d0": d0, "totcol": get_column_letter(ncol + 2)}
+    r = d0 + len(yrs_e) + 1
+# --- % OF TOTAL section (formulas referencing raw) ---
+r += 1
+egs.cell(r, 1, "SHARE OF TOTAL — % = technology PJ / total PJ  (formula referencing the RAW block above)").font = BOLD
+r += 1
+pct_pos = {}
+for st in STRAT_ORDER3:
+    rp = raw_pos[st]; d0r = rp["d0"]; totL = rp["totcol"]
+    egs.cell(r, 1, f"% OF TOTAL — {st}").font = BOLD
+    for c in range(1, ncol + 2):
+        egs.cell(r, c).fill = GREYF
+    hr = r + 1
+    egs.cell(hr, 1, "Year")
+    for j, t in enumerate(etech, 2):
+        egs.cell(hr, j, t)
+    style_header(egs, hr, ncol + 1)
+    d0 = hr + 1
+    for i, y in enumerate(yrs_e):
+        rr = d0 + i
+        egs.cell(rr, 1, int(y)).font = Font(name=FN)
+        for j, t in enumerate(etech, 2):
+            L = get_column_letter(j)
+            egs.cell(rr, j, f"={L}{d0r+i}/{totL}{d0r+i}").font = BLACK
+            egs.cell(rr, j).number_format = "0.0%"
+    pct_pos[st] = {"hdr": hr, "d0": d0, "dn": d0 + len(yrs_e) - 1}
+    r = d0 + len(yrs_e) + 2
+egs.freeze_panes = "B2"
 
+# --- % stacked-area charts (reproduce 'Electricity Generation by Source') ---
+ecws = wb.create_sheet("T4_elec_chart")
+ecws.cell(1, 1, "Task 4 — Electricity generation by source (% of total), per scenario").font = BOLD
+ecws.cell(2, 1, "Stacked area of the SHARE-OF-TOTAL blocks in T4_elec_generation. Reproduces the Tableau "
+              "'Electricity Generation by Source Morocco'.").font = Font(name=FN, size=9, italic=True)
+ar = 4
+for st in STRAT_ORDER3:
+    p = pct_pos[st]
+    ch = AreaChart(); ch.grouping = "stacked"; ch.overlap = 100
+    ch.title = f"Electricity generation mix (% of total) — {st}"
+    ch.height = 9; ch.width = 24
+    ch.y_axis.title = "% of total"; ch.x_axis.title = "Year"
+    data = Reference(egs, min_col=2, max_col=1 + ncol, min_row=p["hdr"], max_row=p["dn"])
+    cats = Reference(egs, min_col=1, min_row=p["d0"], max_row=p["dn"])
+    ch.add_data(data, titles_from_data=True); ch.set_categories(cats)
+    ecws.add_chart(ch, f"A{ar}"); ar += 19
+
+gen, totf, secs, gunits = t4.energy_mix()
 write_pivot("T4_energy_by_fuel", totf,
             "Task 4 — Total final energy demand by fuel (LEDS)",
             "Total Energy Demand by Fuel, from the Tableau 'drivers' datasource. Per-sector splits "
