@@ -562,33 +562,11 @@ def embed_png(sheet, fname, anchor, width=1000):
     wb[sheet].add_image(img)
 
 cws = wb.create_sheet("T4_EVs_chart")
-cws.cell(1, 1, "Task 4 — Number of vehicles by fuel, per strategy (stacked area)").font = BOLD
-cws.cell(2, 1, "Stacked area of the ESTIMATION blocks in T4_vehicles (vehicles = VKM / divisor). Reproduces the "
-              "Tableau 'EVs-Private' (road_light) and 'EVs-Public' (public, road_heavy_freight) views. Note under LTS: "
-              "road_light -> Electricity, road_heavy_freight -> Hydrogen.").font = Font(name=FN, size=9, italic=True)
-MODE_TITLE = {"road_light": "Private light vehicles (road_light, /12,000)",
-              "public": "Public transport (public, /60,000)",
-              "road_heavy_freight": "Heavy freight trucks (road_heavy_freight, /60,000)"}
-# embedded images first (guaranteed to render in Excel for Mac), native charts below
-cws.cell(4, 1, "Rendered images (guaranteed to display); interactive native charts are further below.").font = Font(name=FN, size=9, italic=True)
-embed_png("T4_EVs_chart", "T4_EVs_private.png", "A5", width=1000)
-embed_png("T4_EVs_chart", "T4_EVs_public_heavy.png", "A28", width=1000)
-anchor_row = 56
-for mode in ["road_light", "public", "road_heavy_freight"]:
-    cws.cell(anchor_row, 1, MODE_TITLE[mode]).font = Font(name=FN, bold=True, size=12)
-    anchor_row += 1
-    for blk in [b for b in EST_BLOCKS if b["mode"] == mode]:
-        ch = AreaChart(); ch.grouping = "stacked"; ch.overlap = 100
-        ch.title = f"{mode} vehicles by fuel — {blk['strat']}"
-        ch.height = 8.0; ch.width = 20
-        ch.y_axis.title = "Vehicles"; ch.x_axis.title = "Year"
-        data = Reference(ws, min_col=2, max_col=1 + blk["nfuel"], min_row=blk["hdr"], max_row=blk["dn"])
-        cats = Reference(ws, min_col=1, min_row=blk["d0"], max_row=blk["dn"])
-        ch.add_data(data, titles_from_data=True)
-        ch.set_categories(cats)
-        cws.add_chart(ch, f"A{anchor_row}")
-        anchor_row += 17
-    anchor_row += 2
+cws.cell(1, 1, "Task 4 — Number of vehicles by fuel, per strategy").font = BOLD
+cws.cell(2, 1, "Vehicles = VKM / divisor (road_light /12,000; public and road_heavy_freight /60,000), by fuel and "
+              "scenario. Under LTS: road_light -> Electricity, road_heavy_freight -> Hydrogen.").font = Font(name=FN, size=9, italic=True)
+embed_png("T4_EVs_chart", "T4_EVs_private.png", "A4", width=1040)
+embed_png("T4_EVs_chart", "T4_EVs_public_heavy.png", "A28", width=1040)
 
 # ---- electricity generation: RAW PJ + % of total, per scenario, from the raw run ----
 elec, etech = t4.elec_production_pj()
@@ -666,24 +644,12 @@ for st in STRAT_ORDER3:
     r = d0 + len(yrs_e) + 2
 egs.freeze_panes = "B2"
 
-# --- % stacked-area charts (reproduce 'Electricity Generation by Source') ---
+# --- electricity mix chart (% of total), reproduces 'Electricity Generation by Source' ---
 ecws = wb.create_sheet("T4_elec_chart")
 ecws.cell(1, 1, "Task 4 — Electricity generation by source (% of total), per scenario").font = BOLD
-ecws.cell(2, 1, "Stacked area of the SHARE-OF-TOTAL blocks in T4_elec_generation. Reproduces the Tableau "
-              "'Electricity Generation by Source Morocco'.").font = Font(name=FN, size=9, italic=True)
-ecws.cell(4, 1, "Rendered image (guaranteed to display); interactive native charts are further below.").font = Font(name=FN, size=9, italic=True)
-embed_png("T4_elec_chart", "T4_elec_mix.png", "A5", width=1100)
-ar = 30
-for st in STRAT_ORDER3:
-    p = pct_pos[st]
-    ch = AreaChart(); ch.grouping = "stacked"; ch.overlap = 100
-    ch.title = f"Electricity generation mix (% of total) — {st}"
-    ch.height = 9; ch.width = 24
-    ch.y_axis.title = "% of total"; ch.x_axis.title = "Year"
-    data = Reference(egs, min_col=2, max_col=1 + ncol, min_row=p["hdr"], max_row=p["dn"])
-    cats = Reference(egs, min_col=1, min_row=p["d0"], max_row=p["dn"])
-    ch.add_data(data, titles_from_data=True); ch.set_categories(cats)
-    ecws.add_chart(ch, f"A{ar}"); ar += 19
+ecws.cell(2, 1, "Share of total electricity production by technology, computed in T4_elec_generation. Reproduces the "
+              "Tableau 'Electricity Generation by Source Morocco'.").font = Font(name=FN, size=9, italic=True)
+embed_png("T4_elec_chart", "T4_elec_mix.png", "A4", width=1150)
 
 gen, totf, secs, gunits = t4.energy_mix()
 write_pivot("T4_energy_by_fuel", totf,
