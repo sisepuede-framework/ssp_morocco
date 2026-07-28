@@ -536,7 +536,7 @@ def veh_section(mode, divisor):
             ws.cell(rr, len(fuels)+2, f"=SUM(B{rr}:{get_column_letter(len(fuels)+1)}{rr})").font = BOLD
             ws.cell(rr, len(fuels)+2).number_format = "#,##0"
         EST_BLOCKS.append({"mode": mode, "strat": strat, "hdr": hr, "d0": d0,
-                           "dn": d0 + len(yrs_ref) - 1, "nfuel": len(fuels)})
+                           "dn": d0 + len(yrs_ref) - 1, "nfuel": len(fuels), "fuels": list(fuels)})
         r = d0 + len(yrs_ref) + 2
 
 EST_BLOCKS = []
@@ -547,26 +547,55 @@ ws.freeze_panes = "B2"
 
 # ---- charts: final output of Task 4 (stacked area, vehicles by fuel, per strategy) ----
 from openpyxl.chart import AreaChart, Reference
-from openpyxl.drawing.image import Image as XLImage
 
-def embed_png(sheet, fname, anchor, width=1000):
-    """Embed a PNG (scaled to `width` px, aspect preserved) if it exists. Renders in every
-    Excel (unlike native openpyxl charts, which can show blank in Excel for Mac)."""
-    path = os.path.join(HERE, fname)
-    if not os.path.exists(path):
-        return
-    img = XLImage(path)
-    if img.width:
-        img.height = int(img.height * width / img.width); img.width = width
-    img.anchor = anchor
-    wb[sheet].add_image(img)
+FUEL_COLORS = {"electricity": "F5A623", "gasoline": "7FC7BF", "diesel": "6B8FB5",
+               "hydrocarbon_gas_liquids": "8FBF6B", "hydrogen": "E0798C",
+               "biofuels": "B0A0D0", "natural_gas": "C9A05A"}
+TECH_COLORS = {"coal": "E8963A", "coal_ccs": "F0C08A", "gas": "5FA55A", "gas_ccs": "A9D4A0",
+               "oil": "D9737A", "solar": "F2A9BC", "wind": "B8B8B8", "hydropower": "F0D264",
+               "nuclear": "4C9C93", "biogas": "5A7DB0", "biomass": "A9C7E8", "ocean": "8FD0CE",
+               "waste_incineration": "9A9A9A", "geothermal": "B8A94C"}
+
+def area_chart(target_ws, anchor, title, src_ws, hdr, d0, dn, names, colors, ytitle,
+               numfmt=None, width=12.5, height=8.0, ymax=None, ymin=0):
+    """A well-formatted stacked-area chart with per-series colours matching `names`."""
+    ch = AreaChart(); ch.grouping = "stacked"; ch.overlap = 100
+    ch.title = title; ch.style = 2
+    ch.width = width; ch.height = height
+    ch.y_axis.title = ytitle; ch.x_axis.title = "Year"
+    ch.x_axis.delete = False; ch.y_axis.delete = False
+    if numfmt:
+        ch.y_axis.numFmt = numfmt
+    if ymax is not None:
+        ch.y_axis.scaling.max = ymax
+    if ymin is not None:
+        ch.y_axis.scaling.min = ymin
+    data = Reference(src_ws, min_col=2, max_col=1 + len(names), min_row=hdr, max_row=dn)
+    cats = Reference(src_ws, min_col=1, min_row=d0, max_row=dn)
+    ch.add_data(data, titles_from_data=True); ch.set_categories(cats)
+    for i, ser in enumerate(ch.series):
+        col = colors.get(names[i]) if i < len(names) else None
+        if col:
+            ser.graphicalProperties.solidFill = col
+            ser.graphicalProperties.line.solidFill = col
+    ch.legend.position = "r"
+    target_ws.add_chart(ch, anchor)
 
 cws = wb.create_sheet("T4_EVs_chart")
 cws.cell(1, 1, "Task 4 — Number of vehicles by fuel, per strategy").font = BOLD
-cws.cell(2, 1, "Vehicles = VKM / divisor (road_light /12,000; public and road_heavy_freight /60,000), by fuel and "
-              "scenario. Under LTS: road_light -> Electricity, road_heavy_freight -> Hydrogen.").font = Font(name=FN, size=9, italic=True)
-embed_png("T4_EVs_chart", "T4_EVs_private.png", "A4", width=1040)
-embed_png("T4_EVs_chart", "T4_EVs_public_heavy.png", "A28", width=1040)
+cws.cell(2, 1, "Vehicles = VKM / divisor (road_light /12,000; public and road_heavy_freight /60,000). "
+              "Under LTS: road_light -> Electricity, road_heavy_freight -> Hydrogen.").font = Font(name=FN, size=9, italic=True)
+VEH_YTITLE = {"road_light": "Vehicles", "public": "Vehicles", "road_heavy_freight": "Vehicles"}
+MODE_ROW = {"road_light": 4, "public": 21, "road_heavy_freight": 38}
+STRAT_COL = {"Business as Usual - CDN": "A", "Baseline Scenario - SNBC": "K", "LTS": "U"}
+for mode in ["road_light", "public", "road_heavy_freight"]:
+    cws.cell(MODE_ROW[mode] - 1, 1, {"road_light": "Private light vehicles (road_light, /12,000)",
+             "public": "Public transport (public, /60,000)",
+             "road_heavy_freight": "Heavy freight trucks (road_heavy_freight, /60,000)"}[mode]).font = Font(name=FN, bold=True, size=11)
+    for blk in [b for b in EST_BLOCKS if b["mode"] == mode]:
+        area_chart(cws, f"{STRAT_COL[blk['strat']]}{MODE_ROW[mode]}",
+                   f"{blk['strat']}", ws, blk["hdr"], blk["d0"], blk["dn"],
+                   blk["fuels"], FUEL_COLORS, "Vehicles")
 
 # ---- electricity generation: RAW PJ + % of total, per scenario, from the raw run ----
 elec, etech = t4.elec_production_pj()
@@ -644,12 +673,17 @@ for st in STRAT_ORDER3:
     r = d0 + len(yrs_e) + 2
 egs.freeze_panes = "B2"
 
-# --- electricity mix chart (% of total), reproduces 'Electricity Generation by Source' ---
+# --- electricity mix charts (% of total), reproduce 'Electricity Generation by Source' ---
 ecws = wb.create_sheet("T4_elec_chart")
 ecws.cell(1, 1, "Task 4 — Electricity generation by source (% of total), per scenario").font = BOLD
-ecws.cell(2, 1, "Share of total electricity production by technology, computed in T4_elec_generation. Reproduces the "
+ecws.cell(2, 1, "Share of total electricity production by technology (from T4_elec_generation). Reproduces the "
               "Tableau 'Electricity Generation by Source Morocco'.").font = Font(name=FN, size=9, italic=True)
-embed_png("T4_elec_chart", "T4_elec_mix.png", "A4", width=1150)
+ELEC_COL = {"Business as Usual - CDN": "A", "Baseline Scenario - SNBC": "N", "LTS": "AA"}
+for st in STRAT_ORDER3:
+    p = pct_pos[st]
+    area_chart(ecws, f"{ELEC_COL[st]}4", st, egs, p["hdr"], p["d0"], p["dn"],
+               etech, TECH_COLORS, "% of total", numfmt="0%", width=15.0, height=9.5,
+               ymax=1.0, ymin=0.0)
 
 gen, totf, secs, gunits = t4.energy_mix()
 write_pivot("T4_energy_by_fuel", totf,
