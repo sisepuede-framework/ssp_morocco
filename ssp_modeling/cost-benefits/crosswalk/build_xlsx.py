@@ -547,6 +547,20 @@ ws.freeze_panes = "B2"
 
 # ---- charts: final output of Task 4 (stacked area, vehicles by fuel, per strategy) ----
 from openpyxl.chart import AreaChart, Reference
+from openpyxl.drawing.image import Image as XLImage
+
+def embed_png(sheet, fname, anchor, width=1000):
+    """Embed a PNG (scaled to `width` px, aspect preserved) if it exists. Renders in every
+    Excel (unlike native openpyxl charts, which can show blank in Excel for Mac)."""
+    path = os.path.join(HERE, fname)
+    if not os.path.exists(path):
+        return
+    img = XLImage(path)
+    if img.width:
+        img.height = int(img.height * width / img.width); img.width = width
+    img.anchor = anchor
+    wb[sheet].add_image(img)
+
 cws = wb.create_sheet("T4_EVs_chart")
 cws.cell(1, 1, "Task 4 — Number of vehicles by fuel, per strategy (stacked area)").font = BOLD
 cws.cell(2, 1, "Stacked area of the ESTIMATION blocks in T4_vehicles (vehicles = VKM / divisor). Reproduces the "
@@ -555,7 +569,11 @@ cws.cell(2, 1, "Stacked area of the ESTIMATION blocks in T4_vehicles (vehicles =
 MODE_TITLE = {"road_light": "Private light vehicles (road_light, /12,000)",
               "public": "Public transport (public, /60,000)",
               "road_heavy_freight": "Heavy freight trucks (road_heavy_freight, /60,000)"}
-anchor_row = 4
+# embedded images first (guaranteed to render in Excel for Mac), native charts below
+cws.cell(4, 1, "Rendered images (guaranteed to display); interactive native charts are further below.").font = Font(name=FN, size=9, italic=True)
+embed_png("T4_EVs_chart", "T4_EVs_private.png", "A5", width=1000)
+embed_png("T4_EVs_chart", "T4_EVs_public_heavy.png", "A28", width=1000)
+anchor_row = 56
 for mode in ["road_light", "public", "road_heavy_freight"]:
     cws.cell(anchor_row, 1, MODE_TITLE[mode]).font = Font(name=FN, bold=True, size=12)
     anchor_row += 1
@@ -653,7 +671,9 @@ ecws = wb.create_sheet("T4_elec_chart")
 ecws.cell(1, 1, "Task 4 — Electricity generation by source (% of total), per scenario").font = BOLD
 ecws.cell(2, 1, "Stacked area of the SHARE-OF-TOTAL blocks in T4_elec_generation. Reproduces the Tableau "
               "'Electricity Generation by Source Morocco'.").font = Font(name=FN, size=9, italic=True)
-ar = 4
+ecws.cell(4, 1, "Rendered image (guaranteed to display); interactive native charts are further below.").font = Font(name=FN, size=9, italic=True)
+embed_png("T4_elec_chart", "T4_elec_mix.png", "A5", width=1100)
+ar = 30
 for st in STRAT_ORDER3:
     p = pct_pos[st]
     ch = AreaChart(); ch.grouping = "stacked"; ch.overlap = 100
