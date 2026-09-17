@@ -10,7 +10,9 @@ parameters:
   - road_heavy_regional
   magnitude: 0.9
   vec_implementation_ramp:
-    tp_0_ramp: 10
+    tp_0_ramp: 17
+    n_tp_ramp: 23
+    alpha_logistic: 0.0
   dict_fuel_allocation:
     fuel_electricity: 0.1
     fuel_hydrogen: 0.9
