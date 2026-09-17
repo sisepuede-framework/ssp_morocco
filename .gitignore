@@ -216,3 +216,6 @@ ssp_modeling/input_data/reference/*
 
 # Ignore Tableau backup files
 .~*.twbr
+
+# Ignore crosswalk files
+ssp_modeling/cost-benefits/crosswalk

@@ -58,6 +58,8 @@ lines = [
  ("  T1_agent_split   : investment x {gov, firms, hh} shares + applied bn + documented source per sector.", False),
  ("  T1_cost_vectors  : share matrix, SAM destination x investment sector (blue = editable inputs; each column sums to 1).", False),
  ("  T1_applied_SAM   : applied bn = cost-vector share x sector investment total (formulas).", False),
+ ("  T1_applied_SAM_by_agent : the SAM allocation split by financing agent (dest x {gov, firms, hh}); "
+  "crosses the two decompositions and reconciles to both margins.", False),
  ("  T2_fuel_savings  : power-sector fuel COST savings by generation technology (from NEMOMOD).", False),
  ("  T2_capex_by_tech : generation capital expenditure by technology (from NEMOMOD).", False),
  ("  T2_note          : why these differ from the CB 'Fuel cost savings (power sector)' row. READ THIS.", False),
@@ -177,6 +179,65 @@ for j in range(2, len(SECTORS)+3):
     ws.cell(rtot, j, f"=SUM({L}2:{L}{rtot-1})").font = BOLD
     ws.cell(rtot, j).number_format = BN; ws.cell(rtot, j).fill = GREYF
 ws.freeze_panes = "B2"
+
+# ---------------- T1_applied_SAM_by_agent (cross of the two decompositions) ----------------
+# applied[dest, agent] = sum_sector  applied_SAM[dest, sector] x agent_share[sector, agent].
+# Reconciles both ways: row sum -> T1_applied_SAM total; column sum -> T1_agent_split total.
+# Only destinations that actually receive money are listed (clean client view); the
+# formulas still reference T1_applied_SAM by original row so they stay auditable.
+sam_tot_calc = {}
+for _s in SECTORS:
+    _T = inv_cum[_s]
+    for _dest, _sh in COST_VECTORS[_s][0].items():
+        sam_tot_calc[_dest] = sam_tot_calc.get(_dest, 0) + _T * _sh
+active_dests = [(i, d) for i, d in enumerate(DEST) if sam_tot_calc.get(d, 0) > 1e-9]
+AGENT_COL = {"Government": "C", "Firms": "D", "Households": "E"}  # columns in T1_agent_split
+
+ws = wb.create_sheet("T1_applied_SAM_by_agent", 4)
+ws.cell(1, 1, "Task 1 — SAM allocation split by financing agent (bn 2019 USD)").font = BOLD
+ws.cell(2, 1, "applied[SAM destination, agent] = SUM over investment sectors of "
+              "T1_applied_SAM[destination, sector] x agent-share[sector, agent] (from T1_agent_split). "
+              "Each row sums to the T1_applied_SAM total; each agent column sums to the T1_agent_split "
+              "total (Gov 120.9 / Firms 129.1 / HH 23.6). Cost vector assumed independent of financing.").font = Font(name=FN, size=9, italic=True)
+hdr2 = ["SAM destination", "Gov (bn)", "Firms (bn)", "HH (bn)", "TOTAL (bn)",
+        "Gov %", "Firms %", "HH %"]
+hrow = 4
+for j, h in enumerate(hdr2, 1):
+    ws.cell(hrow, j, h)
+style_header(ws, hrow, len(hdr2))
+ws.column_dimensions["A"].width = 52
+for j in range(2, len(hdr2) + 1):
+    ws.column_dimensions[get_column_letter(j)].width = 12
+nsec = len(SECTORS)
+r = hrow + 1
+for orig_i, d in active_dests:
+    ar = 2 + orig_i           # matching row in T1_applied_SAM
+    lab = ws.cell(r, 1, SAM[d]); lab.font = Font(name=FN)
+    if d == "imports":
+        lab.font = Font(name=FN, bold=True, color="C00000")
+    for aci, (aname, acol) in enumerate(AGENT_COL.items()):
+        terms = "+".join(
+            f"T1_applied_SAM!{get_column_letter(2 + k)}{ar}*T1_agent_split!{acol}${2 + k}"
+            for k in range(nsec))
+        cell = ws.cell(r, 2 + aci, "=" + terms); cell.font = BLACK; cell.number_format = BN
+    ws.cell(r, 5, f"=SUM(B{r}:D{r})").font = BOLD; ws.cell(r, 5).number_format = BN
+    for pci in range(3):       # Gov/Firms/HH as % of the destination total
+        pc = ws.cell(r, 6 + pci, f"={get_column_letter(2 + pci)}{r}/$E{r}")
+        pc.font = Font(name=FN, color="808080"); pc.number_format = PCT
+    r += 1
+# totals row
+ws.cell(r, 1, "TOTAL").font = BOLD
+for col in range(2, 6):
+    L = get_column_letter(col)
+    ws.cell(r, col, f"=SUM({L}{hrow + 1}:{L}{r - 1})").font = BOLD
+    ws.cell(r, col).number_format = BN
+for pci in range(3):
+    L = get_column_letter(2 + pci)
+    ws.cell(r, 6 + pci, f"={L}{r}/$E{r}").font = Font(name=FN, bold=True, color="808080")
+    ws.cell(r, 6 + pci).number_format = PCT
+for c in range(1, len(hdr2) + 1):
+    ws.cell(r, c).fill = GREYF
+ws.freeze_panes = "B5"
 
 # ---------------- T2 tabs (transparent: raw BASE + raw LEDS + formula) ----------------
 def t2_transparent(sheet, detail_csv, title, method_lines, calc_label, minuend, subtrahend,
@@ -701,7 +762,7 @@ DG_TEMPERATE = {  # service -> value; the $500/ha is already NET of food + clima
     "Cultural (recreation/TOURISM, aesthetic, inspiration)": 990,
 }
 DG_STRIPPED = {"Food (provisioning)": 299, "Climate regulation (carbon)": 152}
-dg_base = sum(DG_TEMPERATE.values())   # 2562 after stripping food + carbon
+dg_base = sum(DG_TEMPERATE.values())   # 2563 after stripping food + carbon
 NET_HA = 500.0                          # primary forest $/ha/yr, already net of food+carbon
 
 ws = wb.create_sheet("T5_ecosystem_split")
@@ -709,11 +770,16 @@ ws.column_dimensions["A"].width = 66
 for i, w in enumerate([66, 16, 14, 16], 1):
     ws.column_dimensions[get_column_letter(i)].width = w
 ws.cell(1, 1, "Task 5 — Ecosystem services: evidence-based split of the $500/ha/yr forest value").font = BOLD
-ws.cell(2, 1, "Source: de Groot et al. (2012) Table 2, temperate forest (Int$/ha/yr, 2007) — the unit-value basis of "
-              "Costanza (2014). Morocco-specific refinement: Taye (2021).").font = Font(name=FN, size=9, italic=True)
-ws.cell(3, 1, "The $500/ha is ALREADY NET of food provisioning and carbon (climate regulation); those two services "
+ws.cell(2, 1, "Source: de Groot, R., Brander, L., van der Ploeg, S., et al. (2012), \"Global estimates of the value of "
+              "ecosystems and their services in monetary units\", Ecosystem Services 1(1): 50-61, "
+              "doi:10.1016/j.ecoser.2012.07.005 — Table 2, column \"Temperate forest\" (Int$/ha/yr, 2007 price levels). "
+              "Unit-value basis of Costanza et al. (2014). Morocco/Mediterranean refinement: Taye et al. (2021).").font = Font(name=FN, size=9, italic=True)
+ws.cell(3, 1, "Derivation from Table 2 (Temperate forest, biome total 3,013): Provisioning non-food 372 = Water 191 + "
+              "Raw materials 181 (= Provisioning 671 - Food 299); Regulating non-climate 339 = Regulating 491 - "
+              "Climate regulation 152; Habitat 862 = Genetic diversity; Cultural 990 = Recreation 989 + Cognitive 1.").font = Font(name=FN, size=9, italic=True)
+ws.cell(4, 1, "The $500/ha is ALREADY NET of food provisioning and carbon (climate regulation); those two services "
               "are stripped below and the remainder renormalised, so there is NO double-count against crop value.").font = Font(name=FN, size=9, italic=True)
-hr = 5
+hr = 6
 for j, h in enumerate(["Ecosystem service (grouped)", "de Groot Int$/ha", "Share of net", "Applied $/ha (of 500)"], 1):
     ws.cell(hr, j, h)
 style_header(ws, hr, 4)
@@ -779,6 +845,17 @@ memo = [
  ("    - Components 2 and 3 (waste, conservation ag) cannot be split by product at all.", False),
  ("  Recommendation: report the dietary component optionally split via Springmann (flagged as an assumption), and", False),
  ("  state plainly that the waste and conservation-agriculture components are not decomposable by product.", False),
+ ("", False),
+ ("REFERENCES", True),
+ ("  de Groot, R., Brander, L., van der Ploeg, S., et al. (2012). Global estimates of the value of ecosystems and", False),
+ ("     their services in monetary units. Ecosystem Services 1(1): 50-61. doi:10.1016/j.ecoser.2012.07.005", False),
+ ("     -> Table 2, column \"Temperate forest\" (Int$/ha/yr, 2007 price levels) — source of the service split.", False),
+ ("  Costanza, R., de Groot, R., Sutton, P., et al. (2014). Changes in the global value of ecosystem services.", False),
+ ("     Global Environmental Change 26: 152-158. doi:10.1016/j.gloenvcha.2014.04.002 — global scaling of the de Groot unit values.", False),
+ ("  Taye, F.A., Folkersen, M.V., Fleming, C.M., et al. (2021). The economic values of global forest ecosystem", False),
+ ("     services: A meta-analysis. Ecological Economics 189: 107145. doi:10.1016/j.ecolecon.2021.107145 — Mediterranean/regional refinement.", False),
+ ("  Springmann, M., Godfray, H.C.J., Rayner, M., Scarborough, P. (2016). Analysis and valuation of the health and", False),
+ ("     climate change cobenefits of dietary change. PNAS 113(15): 4146-4151. doi:10.1073/pnas.1523119113 — optional dietary-product split.", False),
 ]
 for i, (t, b) in enumerate(memo, 1):
     c = ws.cell(i, 1, t); c.font = BOLD if b else Font(name=FN); c.alignment = WRAP
