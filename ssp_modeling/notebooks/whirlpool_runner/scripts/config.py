@@ -70,8 +70,11 @@ INITIAL_CONDITIONS_ID = "_0"
 # Set these explicitly to pin runs; leave None to auto-detect:
 #   RUN_ID         → most recent run dir holding a *_WIDE_INPUTS_OUTPUTS.csv
 #   TORNADO_RUN_ID → most recent run dir holding marginal_abatement_costs_tornado.csv
-RUN_ID: str | None         = None
-TORNADO_RUN_ID: str | None = None
+RUN_ID: str | None         = "sisepuede_results_sisepuede_run_2026-09-17T17;28;54.353650"   # whirlpool Morocco, 44 primaries
+# Pinned on purpose: the whirlpool run dir also holds a stray
+# marginal_abatement_costs_tornado.csv (tornado runner once pointed at it), so the
+# auto-detect would pick the whirlpool run itself as the tornado reference.
+TORNADO_RUN_ID: str | None = "sisepuede_results_sisepuede_run_2026-09-17T16;54;17.970763"   # tornado Morocco, 44 primaries
 
 
 def _latest_run_id(marker: str = "*_WIDE_INPUTS_OUTPUTS.csv", what: str = "wide-format export") -> str:

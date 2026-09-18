@@ -67,7 +67,7 @@ INITIAL_CONDITIONS_ID = "_0"
 # ── Run to analyze ────────────────────────────────────────────────────────────
 # Set RUN_ID explicitly to pin a run; leave None to pick the most recent run
 # directory that contains a *_WIDE_INPUTS_OUTPUTS.csv file.
-RUN_ID: str | None = None
+RUN_ID: str | None = "sisepuede_results_sisepuede_run_2026-09-17T16;54;17.970763"   # tornado Morocco, 44 primaries
 
 
 def _latest_run_id() -> str:
