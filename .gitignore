@@ -219,3 +219,5 @@ ssp_modeling/input_data/reference/*
 
 # Ignore crosswalk files
 ssp_modeling/cost-benefits/crosswalk
+
+ssp_modeling/report/
