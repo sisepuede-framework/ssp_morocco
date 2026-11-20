@@ -221,3 +221,5 @@ ssp_modeling/input_data/reference/*
 ssp_modeling/cost-benefits/crosswalk
 
 ssp_modeling/report/
+# Old input versions (only sisepuede_inputs_morocco_vf.csv is tracked)
+ssp_modeling/input_data/backup/
