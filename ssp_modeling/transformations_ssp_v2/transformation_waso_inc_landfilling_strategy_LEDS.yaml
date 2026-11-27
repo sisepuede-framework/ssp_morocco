@@ -8,4 +8,5 @@ parameters:
   magnitude: 1.0
   vec_implementation_ramp:
     tp_0_ramp: 10
+    n_tp_ramp: 25
 transformer: "TFR:WASO:INC_LANDFILLING"

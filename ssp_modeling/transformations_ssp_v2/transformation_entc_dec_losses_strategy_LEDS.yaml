@@ -10,4 +10,5 @@ parameters:
   min_loss: 0.02
   vec_implementation_ramp:
     tp_0_ramp: 10
+    n_tp_ramp: 25
 transformer: "TFR:ENTC:DEC_LOSSES"

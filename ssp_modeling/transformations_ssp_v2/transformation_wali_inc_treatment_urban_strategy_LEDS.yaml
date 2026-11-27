@@ -9,4 +9,5 @@ parameters:
   return_pathways: false
   vec_implementation_ramp:
     tp_0_ramp: 12
+    n_tp_ramp: 25
 transformer: "TFR:WALI:INC_TREATMENT_URBAN"

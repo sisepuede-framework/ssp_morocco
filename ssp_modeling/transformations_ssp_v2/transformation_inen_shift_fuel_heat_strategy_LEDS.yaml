@@ -10,4 +10,5 @@ parameters:
   frac_switchable: 0.9
   vec_implementation_ramp:
     tp_0_ramp: 12
+    n_tp_ramp: 25
 transformer: "TFR:INEN:SHIFT_FUEL_HEAT"

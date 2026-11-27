@@ -12,4 +12,5 @@ parameters:
   magnitude: 0.8
   vec_implementation_ramp:
     tp_0_ramp: 7
+    n_tp_ramp: 28
 transformer: "TFR:LNDU:INC_REFORESTATION"

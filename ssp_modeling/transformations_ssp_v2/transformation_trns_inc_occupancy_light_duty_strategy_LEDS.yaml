@@ -8,4 +8,5 @@ parameters:
   magnitude: 0.25
   vec_implementation_ramp:
     tp_0_ramp: 10
+    n_tp_ramp: 25
 transformer: "TFR:TRNS:INC_OCCUPANCY_LIGHT_DUTY"

@@ -13,4 +13,5 @@ parameters:
   return_prevalence_dict: false
   vec_implementation_ramp:
     tp_0_ramp: 10
+    n_tp_ramp: 25
 transformer: "TFR:PFLO:INC_IND_CCS"

@@ -13,4 +13,5 @@ parameters:
   vec_cats_lvst: null
   vec_implementation_ramp:
     tp_0_ramp: 10
+    n_tp_ramp: 25
 transformer: "TFR:LSMM:INC_MANAGEMENT_CATTLE_PIGS"

@@ -6,5 +6,6 @@ identifiers:
 parameters:
   magnitude: 0.99999
   vec_implementation_ramp:
+    n_tp_ramp: 5
     tp_0_ramp: 10
 transformer: "TFR:LNDU:DEC_DEFORESTATION"
